@@ -1,0 +1,74 @@
+.dashboard-page {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: 56px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.dashboard-brand {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent);
+  font-family: var(--heading);
+  letter-spacing: -0.3px;
+}
+
+.dashboard-header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.dashboard-user {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.logout-btn {
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-h);
+  font-size: 14px;
+  font-family: var(--sans);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.logout-btn:hover {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.dashboard-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+  padding: 40px 24px;
+}
+
+.dashboard-main h2 {
+  font-size: 32px;
+  margin: 0;
+}
+
+.dashboard-main p {
+  color: var(--text);
+  font-size: 16px;
+}
