@@ -1,9 +1,12 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import Layout from './components/Layout'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
+import Inventory from './pages/Inventory'
 
-function PrivateRoute({ children }) {
-  return localStorage.getItem('token') ? children : <Navigate to="/login" replace />
+function ProtectedLayout() {
+  if (!localStorage.getItem('token')) return <Navigate to="/login" replace />
+  return <Layout />
 }
 
 export default function App() {
@@ -11,15 +14,11 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route
-          path="/dashboard"
-          element={
-            <PrivateRoute>
-              <Dashboard />
-            </PrivateRoute>
-          }
-        />
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route element={<ProtectedLayout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/inventory" element={<Inventory />} />
+          <Route path="*" element={<Navigate to="/inventory" replace />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   )
