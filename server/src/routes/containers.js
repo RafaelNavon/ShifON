@@ -8,7 +8,9 @@ router.use(authenticate);
 // GET /api/containers — full inventory view
 router.get('/', async (req, res) => {
   try {
-    const { rows: containers } = await pool.query('SELECT * FROM containers ORDER BY id');
+    const { rows: containers } = await pool.query(
+      'SELECT * FROM containers ORDER BY id',
+    );
 
     const { rows: slots } = await pool.query(`
       SELECT s.*,
@@ -26,6 +28,7 @@ router.get('/', async (req, res) => {
         .filter((s) => s.container_id === c.id)
         .map((s) => ({
           id: s.id,
+          container_id: s.container_id,
           slot_number: s.slot_number,
           position: s.position,
           batch: s.batch_id
@@ -43,7 +46,8 @@ router.get('/', async (req, res) => {
     }));
 
     res.json(result);
-  } catch {
+  } catch (err) {
+    console.error('Error in GET containers:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });

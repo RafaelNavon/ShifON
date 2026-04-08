@@ -18,7 +18,8 @@ router.get('/', async (req, res) => {
       ORDER BY t.due_date ASC NULLS LAST, t.created_at DESC
     `);
     res.json(rows);
-  } catch {
+  } catch (err) {
+    console.error('Error in GET all tasks:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -31,10 +32,11 @@ router.post('/', async (req, res) => {
     const { rows } = await pool.query(
       `INSERT INTO tasks (title, description, assigned_to, created_by, due_date)
        VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [title, description, assigned_to, req.user.id, due_date]
+      [title, description, assigned_to, req.user.id, due_date],
     );
     res.status(201).json(rows[0]);
-  } catch {
+  } catch (err) {
+    console.error('Error in POST create task:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -51,11 +53,12 @@ router.put('/:id', async (req, res) => {
         status = COALESCE($4, status),
         due_date = COALESCE($5, due_date)
        WHERE id = $6 RETURNING *`,
-      [title, description, assigned_to, status, due_date, req.params.id]
+      [title, description, assigned_to, status, due_date, req.params.id],
     );
     if (!rows[0]) return res.status(404).json({ error: 'Task not found' });
     res.json(rows[0]);
-  } catch {
+  } catch (err) {
+    console.error('Error in PUT update task:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -63,10 +66,13 @@ router.put('/:id', async (req, res) => {
 // DELETE /api/tasks/:id
 router.delete('/:id', async (req, res) => {
   try {
-    const { rowCount } = await pool.query('DELETE FROM tasks WHERE id = $1', [req.params.id]);
+    const { rowCount } = await pool.query('DELETE FROM tasks WHERE id = $1', [
+      req.params.id,
+    ]);
     if (!rowCount) return res.status(404).json({ error: 'Task not found' });
     res.status(204).end();
-  } catch {
+  } catch (err) {
+    console.error('Error in DELETE task:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });

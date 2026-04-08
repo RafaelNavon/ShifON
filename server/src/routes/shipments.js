@@ -5,31 +5,40 @@ const { authenticate } = require('../middleware/auth');
 const router = express.Router();
 router.use(authenticate);
 
+const SHIPMENT_BASE = `
+  SELECT sh.*,
+    u.name AS created_by_name,
+    json_agg(
+      json_build_object(
+        'id', si.id,
+        'batch_id', si.batch_id,
+        'quantity', si.quantity,
+        'bull_name', bu.name,
+        'bull_code', bu.bull_code,
+        'sio_batch_code', ba.sio_batch_code,
+        'container_name', c.name,
+        'slot_number', s.slot_number,
+        'position', s.position
+      )
+    ) FILTER (WHERE si.id IS NOT NULL) AS items
+  FROM shipments sh
+  LEFT JOIN users u ON u.id = sh.created_by
+  LEFT JOIN shipment_items si ON si.shipment_id = sh.id
+  LEFT JOIN batches ba ON ba.id = si.batch_id
+  LEFT JOIN bulls bu ON bu.id = ba.bull_id
+  LEFT JOIN slots s ON s.id = ba.slot_id
+  LEFT JOIN containers c ON c.id = s.container_id
+`;
+
 // GET /api/shipments
 router.get('/', async (req, res) => {
   try {
-    const { rows } = await pool.query(`
-      SELECT sh.*,
-        u.name AS created_by_name,
-        json_agg(
-          json_build_object(
-            'id', si.id,
-            'batch_id', si.batch_id,
-            'quantity', si.quantity,
-            'bull_name', bu.name,
-            'bull_code', bu.bull_code
-          )
-        ) FILTER (WHERE si.id IS NOT NULL) AS items
-      FROM shipments sh
-      LEFT JOIN users u ON u.id = sh.created_by
-      LEFT JOIN shipment_items si ON si.shipment_id = sh.id
-      LEFT JOIN batches ba ON ba.id = si.batch_id
-      LEFT JOIN bulls bu ON bu.id = ba.bull_id
-      GROUP BY sh.id, u.name
-      ORDER BY sh.shipment_date DESC
-    `);
+    const { rows } = await pool.query(
+      SHIPMENT_BASE + 'GROUP BY sh.id, u.name ORDER BY sh.shipment_date DESC',
+    );
     res.json(rows);
-  } catch {
+  } catch (err) {
+    console.error('Error in GET all shipments:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -37,29 +46,14 @@ router.get('/', async (req, res) => {
 // GET /api/shipments/:id
 router.get('/:id', async (req, res) => {
   try {
-    const { rows } = await pool.query(`
-      SELECT sh.*,
-        u.name AS created_by_name,
-        json_agg(
-          json_build_object(
-            'id', si.id,
-            'batch_id', si.batch_id,
-            'quantity', si.quantity,
-            'bull_name', bu.name,
-            'bull_code', bu.bull_code
-          )
-        ) FILTER (WHERE si.id IS NOT NULL) AS items
-      FROM shipments sh
-      LEFT JOIN users u ON u.id = sh.created_by
-      LEFT JOIN shipment_items si ON si.shipment_id = sh.id
-      LEFT JOIN batches ba ON ba.id = si.batch_id
-      LEFT JOIN bulls bu ON bu.id = ba.bull_id
-      WHERE sh.id = $1
-      GROUP BY sh.id, u.name
-    `, [req.params.id]);
+    const { rows } = await pool.query(
+      SHIPMENT_BASE + 'WHERE sh.id = $1 GROUP BY sh.id, u.name',
+      [req.params.id],
+    );
     if (!rows[0]) return res.status(404).json({ error: 'Shipment not found' });
     res.json(rows[0]);
-  } catch {
+  } catch (err) {
+    console.error('Error in GET shipment by id:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -67,7 +61,6 @@ router.get('/:id', async (req, res) => {
 // POST /api/shipments — creates shipment and auto-subtracts from batch quantities
 router.post('/', async (req, res) => {
   const { destination, shipment_date, notes, items } = req.body;
-  // items: [{ batch_id, quantity }]
   if (!destination || !shipment_date || !items?.length) {
     return res.status(400).json({ error: 'destination, shipment_date, and items are required' });
   }
@@ -78,29 +71,36 @@ router.post('/', async (req, res) => {
 
     const { rows: [shipment] } = await client.query(
       'INSERT INTO shipments (destination, shipment_date, notes, created_by) VALUES ($1, $2, $3, $4) RETURNING *',
-      [destination, shipment_date, notes, req.user.id]
+      [destination, shipment_date, notes, req.user.id],
     );
 
     for (const item of items) {
-      // Verify sufficient stock
       const { rows: [batch] } = await client.query(
-        'SELECT quantity FROM batches WHERE id = $1 FOR UPDATE',
-        [item.batch_id]
+        'SELECT id, quantity, status FROM batches WHERE id = $1 FOR UPDATE',
+        [item.batch_id],
       );
       if (!batch) throw { status: 404, message: `Batch ${item.batch_id} not found` };
+      if (batch.status !== 'approved') {
+        throw { status: 400, message: `Batch ${item.batch_id} is not approved` };
+      }
       if (batch.quantity < item.quantity) {
         throw { status: 400, message: `Insufficient quantity in batch ${item.batch_id}` };
       }
 
       await client.query(
         'INSERT INTO shipment_items (shipment_id, batch_id, quantity) VALUES ($1, $2, $3)',
-        [shipment.id, item.batch_id, item.quantity]
+        [shipment.id, item.batch_id, item.quantity],
       );
 
-      await client.query(
-        'UPDATE batches SET quantity = quantity - $1 WHERE id = $2',
-        [item.quantity, item.batch_id]
-      );
+      const newQty = batch.quantity - item.quantity;
+      if (newQty === 0) {
+        await client.query('DELETE FROM batches WHERE id = $1', [item.batch_id]);
+      } else {
+        await client.query(
+          'UPDATE batches SET quantity = $1 WHERE id = $2',
+          [newQty, item.batch_id],
+        );
+      }
     }
 
     await client.query('COMMIT');
@@ -108,6 +108,7 @@ router.post('/', async (req, res) => {
   } catch (err) {
     await client.query('ROLLBACK');
     if (err.status) return res.status(err.status).json({ error: err.message });
+    console.error('Error in POST create shipment:', err);
     res.status(500).json({ error: 'Server error' });
   } finally {
     client.release();
@@ -117,10 +118,14 @@ router.post('/', async (req, res) => {
 // DELETE /api/shipments/:id
 router.delete('/:id', async (req, res) => {
   try {
-    const { rowCount } = await pool.query('DELETE FROM shipments WHERE id = $1', [req.params.id]);
+    const { rowCount } = await pool.query(
+      'DELETE FROM shipments WHERE id = $1',
+      [req.params.id],
+    );
     if (!rowCount) return res.status(404).json({ error: 'Shipment not found' });
     res.status(204).end();
-  } catch {
+  } catch (err) {
+    console.error('Error in DELETE shipment:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });

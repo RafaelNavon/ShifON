@@ -23,13 +23,20 @@ router.get('/', async (req, res) => {
       WHERE 1=1
     `;
     const params = [];
-    if (date) { params.push(date); query += ` AND dl.log_date = $${params.length}`; }
-    if (bull_id) { params.push(bull_id); query += ` AND dl.bull_id = $${params.length}`; }
+    if (date) {
+      params.push(date);
+      query += ` AND dl.log_date = $${params.length}`;
+    }
+    if (bull_id) {
+      params.push(bull_id);
+      query += ` AND dl.bull_id = $${params.length}`;
+    }
     query += ' ORDER BY dl.log_date DESC, dl.created_at DESC';
 
     const { rows } = await pool.query(query, params);
     res.json(rows);
-  } catch {
+  } catch (err) {
+    console.error('Error in GET daily logs:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -44,10 +51,11 @@ router.post('/', async (req, res) => {
     const { rows } = await pool.query(
       `INSERT INTO daily_logs (bull_id, slot_id, quantity_produced, log_date, recorded_by, notes)
        VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-      [bull_id, slot_id, quantity_produced, log_date, req.user.id, notes]
+      [bull_id, slot_id, quantity_produced, log_date, req.user.id, notes],
     );
     res.status(201).json(rows[0]);
-  } catch {
+  } catch (err) {
+    console.error('Error in POST create daily log:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -55,10 +63,14 @@ router.post('/', async (req, res) => {
 // DELETE /api/daily-logs/:id
 router.delete('/:id', async (req, res) => {
   try {
-    const { rowCount } = await pool.query('DELETE FROM daily_logs WHERE id = $1', [req.params.id]);
+    const { rowCount } = await pool.query(
+      'DELETE FROM daily_logs WHERE id = $1',
+      [req.params.id],
+    );
     if (!rowCount) return res.status(404).json({ error: 'Log not found' });
     res.status(204).end();
-  } catch {
+  } catch (err) {
+    console.error('Error in DELETE daily log:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });

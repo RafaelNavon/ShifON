@@ -16,7 +16,8 @@ router.get('/', async (req, res) => {
       ORDER BY b.name
     `);
     res.json(rows);
-  } catch {
+  } catch (err) {
+    console.error('Error in GET all bulls:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -24,10 +25,13 @@ router.get('/', async (req, res) => {
 // GET /api/bulls/:id
 router.get('/:id', async (req, res) => {
   try {
-    const { rows } = await pool.query('SELECT * FROM bulls WHERE id = $1', [req.params.id]);
+    const { rows } = await pool.query('SELECT * FROM bulls WHERE id = $1', [
+      req.params.id,
+    ]);
     if (!rows[0]) return res.status(404).json({ error: 'Bull not found' });
     res.json(rows[0]);
-  } catch {
+  } catch (err) {
+    console.error('Error in GET bull by id:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -41,11 +45,12 @@ router.post('/', async (req, res) => {
   try {
     const { rows } = await pool.query(
       'INSERT INTO bulls (name, bull_code, breed, notes) VALUES ($1, $2, $3, $4) RETURNING *',
-      [name, bull_code, breed, notes]
+      [name, bull_code, breed, notes],
     );
     res.status(201).json(rows[0]);
   } catch (err) {
     if (err.code === '23505') return res.status(409).json({ error: 'bull_code already exists' });
+    console.error('Error in POST create bull:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -61,12 +66,13 @@ router.put('/:id', async (req, res) => {
         breed = COALESCE($3, breed),
         notes = COALESCE($4, notes)
        WHERE id = $5 RETURNING *`,
-      [name, bull_code, breed, notes, req.params.id]
+      [name, bull_code, breed, notes, req.params.id],
     );
     if (!rows[0]) return res.status(404).json({ error: 'Bull not found' });
     res.json(rows[0]);
   } catch (err) {
     if (err.code === '23505') return res.status(409).json({ error: 'bull_code already exists' });
+    console.error('Error in PUT update bull:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -74,10 +80,13 @@ router.put('/:id', async (req, res) => {
 // DELETE /api/bulls/:id
 router.delete('/:id', async (req, res) => {
   try {
-    const { rowCount } = await pool.query('DELETE FROM bulls WHERE id = $1', [req.params.id]);
+    const { rowCount } = await pool.query('DELETE FROM bulls WHERE id = $1', [
+      req.params.id,
+    ]);
     if (!rowCount) return res.status(404).json({ error: 'Bull not found' });
     res.status(204).end();
-  } catch {
+  } catch (err) {
+    console.error('Error in DELETE bull:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });

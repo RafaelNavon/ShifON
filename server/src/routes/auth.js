@@ -24,6 +24,7 @@ router.post("/register", async (req, res) => {
     if (err.code === "23505") {
       return res.status(409).json({ error: "Email already in use" });
     }
+    console.error("Error in POST register:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -57,7 +58,7 @@ router.post("/login", async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("Login error:", err);
+    console.error("Error in POST login:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
