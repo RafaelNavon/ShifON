@@ -6,6 +6,7 @@ import Inventory from './pages/Inventory'
 import Bulls from './pages/Bulls'
 import Shipments from './pages/Shipments'
 import DailyLog from './pages/DailyLog'
+import Tasks from './pages/Tasks'
 
 function ProtectedLayout() {
   if (!localStorage.getItem('token')) return <Navigate to="/login" replace />
@@ -23,6 +24,7 @@ export default function App() {
           <Route path="/bulls" element={<Bulls />} />
           <Route path="/shipments" element={<Shipments />} />
           <Route path="/daily-log" element={<DailyLog />} />
+          <Route path="/tasks" element={<Tasks />} />
           <Route path="*" element={<Navigate to="/inventory" replace />} />
         </Route>
       </Routes>

@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const pool = require('./db');
 
 const authRoutes = require('./routes/auth');
 const bullRoutes = require('./routes/bulls');
@@ -27,5 +28,20 @@ app.use('/api/users', userRoutes);
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
+async function cleanupDoneTasks() {
+  try {
+    const { rowCount } = await pool.query(
+      "DELETE FROM tasks WHERE status = 'done' AND completed_at < NOW() - INTERVAL '7 days'",
+    );
+    if (rowCount) console.log(`Cleaned up ${rowCount} expired done task(s).`);
+  } catch (err) {
+    console.error('Error in cleanupDoneTasks:', err);
+  }
+}
+
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`ShifON server running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`ShifON server running on port ${PORT}`);
+  cleanupDoneTasks();
+  setInterval(cleanupDoneTasks, 24 * 60 * 60 * 1000);
+});

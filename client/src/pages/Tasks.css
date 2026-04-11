@@ -1,0 +1,263 @@
+/* ── Page shell ────────────────────────── */
+.tasks-page {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 28px 28px 40px;
+  gap: 24px;
+  min-width: 0;
+}
+
+.tasks-status {
+  text-align: center;
+  color: var(--text);
+  padding: 40px 0;
+  font-size: 15px;
+  margin: 0;
+}
+
+.tasks-status--error {
+  color: #ef4444;
+}
+
+/* ── Kanban board ──────────────────────── */
+.tasks-board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  align-items: start;
+  flex: 1;
+}
+
+/* ── Column ────────────────────────────── */
+.task-column {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  min-height: 120px;
+}
+
+.task-col-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px 11px;
+  border-bottom: 1px solid var(--border);
+  border-radius: 12px 12px 0 0;
+}
+
+.task-col-header--pending {
+  border-top: 3px solid #f59e0b;
+  border-radius: 10px 10px 0 0;
+}
+
+.task-col-header--in_progress {
+  border-top: 3px solid #3b82f6;
+  border-radius: 10px 10px 0 0;
+}
+
+.task-col-header--done {
+  border-top: 3px solid #22c55e;
+  border-radius: 10px 10px 0 0;
+}
+
+.task-col-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-h);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.task-col-count {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text);
+  padding: 1px 8px;
+  min-width: 22px;
+  text-align: center;
+}
+
+.task-list {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.task-list-empty {
+  font-size: 13px;
+  color: var(--text);
+  text-align: center;
+  padding: 16px 0 8px;
+  margin: 0;
+  opacity: 0.6;
+}
+
+/* ── Task card ─────────────────────────── */
+.task-card {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 12px 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+  cursor: pointer;
+  font-family: var(--sans);
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+
+.task-card:hover {
+  box-shadow: 0 0 0 2px var(--accent-border);
+  border-color: var(--accent-border);
+}
+
+.task-card--selected {
+  box-shadow: 0 0 0 2px var(--accent) !important;
+  border-color: var(--accent) !important;
+}
+
+.task-card--overdue {
+  border-color: rgba(239, 68, 68, 0.5);
+  border-left: 3px solid #ef4444;
+}
+
+.task-card--overdue:hover {
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.4);
+  border-color: #ef4444;
+}
+
+.task-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-h);
+  line-height: 1.4;
+}
+
+.task-due {
+  font-size: 11px;
+  color: var(--text);
+}
+
+.task-due--overdue {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.task-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text);
+  margin-top: 2px;
+}
+
+.task-card-in-progress-by {
+  color: #2563eb;
+  font-weight: 500;
+}
+
+.task-card-done-by {
+  color: #16a34a;
+  font-weight: 500;
+}
+
+@media (prefers-color-scheme: dark) {
+  .task-card-done-by {
+    color: #4ade80;
+  }
+}
+
+/* ── Panel: status badge variants ──────── */
+.task-status-badge {
+  font-size: 12px;
+}
+
+.task-status--pending {
+  color: #d97706;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.task-status--in-progress {
+  color: #2563eb;
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.task-status--done {
+  color: #16a34a;
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+@media (prefers-color-scheme: dark) {
+  .task-status--pending {
+    color: #fbbf24;
+    background: rgba(245, 158, 11, 0.15);
+    border-color: rgba(245, 158, 11, 0.35);
+  }
+
+  .task-status--in-progress {
+    color: #93c5fd;
+    background: rgba(59, 130, 246, 0.15);
+    border-color: rgba(59, 130, 246, 0.35);
+  }
+
+  .task-status--done {
+    color: #4ade80;
+    background: rgba(34, 197, 94, 0.15);
+    border-color: rgba(34, 197, 94, 0.35);
+  }
+}
+
+/* ── Panel: description + overdue ──────── */
+.task-panel-desc {
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  padding: 2px 0;
+}
+
+.task-overdue-text {
+  color: #ef4444 !important;
+  font-weight: 600;
+}
+
+/* ── Mobile ────────────────────────────── */
+@media (max-width: 900px) {
+  .tasks-board {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .task-column:last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 600px) {
+  .tasks-page {
+    padding: 16px 16px 32px;
+    gap: 16px;
+  }
+
+  .tasks-board {
+    grid-template-columns: 1fr;
+  }
+
+  .task-column:last-child {
+    grid-column: auto;
+  }
+}

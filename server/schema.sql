@@ -79,8 +79,11 @@ CREATE TABLE tasks (
   description TEXT,
   assigned_to INTEGER REFERENCES users(id) ON DELETE SET NULL,
   created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  completed_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  in_progress_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
   status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'in_progress', 'done')),
   due_date DATE,
+  completed_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
