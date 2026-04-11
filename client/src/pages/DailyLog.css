@@ -1,0 +1,150 @@
+/* ── Page shell ────────────────────────── */
+.dlog-page {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 28px 28px 40px;
+  gap: 24px;
+  min-width: 0;
+}
+
+.dlog-status {
+  text-align: center;
+  color: var(--text);
+  padding: 40px 0;
+  font-size: 15px;
+  margin: 0;
+}
+
+.dlog-status--error {
+  color: #ef4444;
+}
+
+/* ── Section ───────────────────────────── */
+.dlog-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dlog-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text);
+  margin: 0;
+}
+
+.dlog-empty {
+  color: var(--text);
+  font-size: 14px;
+  padding: 12px 0;
+  margin: 0;
+}
+
+/* ── Table ─────────────────────────────── */
+.dlog-table-wrap {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  overflow-x: auto;
+}
+
+.dlog-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.dlog-table thead th {
+  text-align: left;
+  padding: 11px 16px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: var(--code-bg);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.dlog-table tbody tr {
+  transition: background 0.1s;
+}
+
+.dlog-table tbody tr:hover td {
+  background: var(--code-bg);
+}
+
+.dlog-table tbody td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-h);
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+.dlog-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ── Cell variants ─────────────────────── */
+.dlog-bull-name {
+  display: block;
+  font-weight: 600;
+  color: var(--text-h);
+  font-size: 14px;
+}
+
+.dlog-bull-code {
+  display: block;
+  font-size: 11px;
+  color: var(--text);
+  font-family: var(--mono);
+  margin-top: 1px;
+}
+
+.dlog-qty {
+  font-weight: 700;
+  color: var(--text-h);
+}
+
+.dlog-code {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text);
+}
+
+.dlog-notes-cell {
+  color: var(--text);
+  font-size: 13px;
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dlog-time {
+  white-space: nowrap;
+  color: var(--text);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Mobile ────────────────────────────── */
+@media (max-width: 768px) {
+  .dlog-page {
+    padding: 16px 16px 32px;
+    gap: 16px;
+  }
+
+  /* Hide SIO code and notes on narrow screens */
+  .dlog-table thead th:nth-child(4),
+  .dlog-table tbody td:nth-child(4),
+  .dlog-table thead th:nth-child(5),
+  .dlog-table tbody td:nth-child(5) {
+    display: none;
+  }
+}

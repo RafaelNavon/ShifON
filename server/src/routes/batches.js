@@ -87,6 +87,13 @@ router.post("/", async (req, res) => {
         status || "approved",
       ],
     );
+
+    await pool.query(
+      `INSERT INTO daily_logs (bull_id, slot_id, quantity_produced, log_date, recorded_by, notes)
+       VALUES ($1, $2, $3, CURRENT_DATE, $4, $5)`,
+      [bull_id, slot_id, quantity, req.user.id, sio_batch_code || null],
+    );
+
     res.status(201).json(rows[0]);
   } catch (err) {
     console.error("Error in POST create batch:", err);

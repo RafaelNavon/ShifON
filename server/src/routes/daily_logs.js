@@ -5,23 +5,28 @@ const { authenticate } = require('../middleware/auth');
 const router = express.Router();
 router.use(authenticate);
 
+const LOG_FIELDS = `
+  SELECT dl.id, dl.bull_id, dl.slot_id, dl.quantity_produced,
+    TO_CHAR(dl.log_date, 'YYYY-MM-DD') AS log_date,
+    dl.recorded_by, dl.notes, dl.created_at,
+    bu.name AS bull_name, bu.bull_code,
+    s.slot_number, s.position,
+    c.name AS container_name,
+    u.name AS recorded_by_name,
+    ba.sio_batch_code
+  FROM daily_logs dl
+  LEFT JOIN bulls bu ON bu.id = dl.bull_id
+  LEFT JOIN slots s ON s.id = dl.slot_id
+  LEFT JOIN containers c ON c.id = s.container_id
+  LEFT JOIN users u ON u.id = dl.recorded_by
+  LEFT JOIN batches ba ON ba.slot_id = dl.slot_id
+`;
+
 // GET /api/daily-logs?date=YYYY-MM-DD&bull_id=1
 router.get('/', async (req, res) => {
   const { date, bull_id } = req.query;
   try {
-    let query = `
-      SELECT dl.*,
-        bu.name AS bull_name, bu.bull_code,
-        s.slot_number, s.position,
-        c.name AS container_name,
-        u.name AS recorded_by_name
-      FROM daily_logs dl
-      LEFT JOIN bulls bu ON bu.id = dl.bull_id
-      LEFT JOIN slots s ON s.id = dl.slot_id
-      LEFT JOIN containers c ON c.id = s.container_id
-      LEFT JOIN users u ON u.id = dl.recorded_by
-      WHERE 1=1
-    `;
+    let query = LOG_FIELDS + 'WHERE 1=1';
     const params = [];
     if (date) {
       params.push(date);
@@ -37,6 +42,21 @@ router.get('/', async (req, res) => {
     res.json(rows);
   } catch (err) {
     console.error('Error in GET daily logs:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// GET /api/daily-logs/today
+router.get('/today', async (req, res) => {
+  const today = new Date().toISOString().slice(0, 10);
+  try {
+    const { rows } = await pool.query(
+      LOG_FIELDS + 'WHERE dl.log_date = $1 ORDER BY dl.created_at DESC',
+      [today],
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error('Error in GET today daily logs:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
