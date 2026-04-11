@@ -3,6 +3,7 @@ import Layout from './components/Layout'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Inventory from './pages/Inventory'
+import Bulls from './pages/Bulls'
 import Shipments from './pages/Shipments'
 
 function ProtectedLayout() {
@@ -18,6 +19,7 @@ export default function App() {
         <Route element={<ProtectedLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/inventory" element={<Inventory />} />
+          <Route path="/bulls" element={<Bulls />} />
           <Route path="/shipments" element={<Shipments />} />
           <Route path="*" element={<Navigate to="/inventory" replace />} />
         </Route>

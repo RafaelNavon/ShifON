@@ -5,11 +5,13 @@ const { authenticate } = require('../middleware/auth');
 const router = express.Router();
 router.use(authenticate);
 
-// GET /api/bulls — list all bulls with total straw count
+// GET /api/bulls — list all bulls with total straw count and last batch date
 router.get('/', async (req, res) => {
   try {
     const { rows } = await pool.query(`
-      SELECT b.*, COALESCE(SUM(ba.quantity), 0) AS total_straws
+      SELECT b.*,
+        COALESCE(SUM(ba.quantity), 0) AS total_straws,
+        MAX(ba.production_date) AS last_batch_date
       FROM bulls b
       LEFT JOIN batches ba ON ba.bull_id = b.id
       GROUP BY b.id
@@ -18,6 +20,27 @@ router.get('/', async (req, res) => {
     res.json(rows);
   } catch (err) {
     console.error('Error in GET all bulls:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// GET /api/bulls/:id/batches — all current batches for a bull
+router.get('/:id/batches', async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT ba.*,
+        s.slot_number, s.position,
+        c.name AS container_name
+      FROM batches ba
+      LEFT JOIN slots s ON s.id = ba.slot_id
+      LEFT JOIN containers c ON c.id = s.container_id
+      WHERE ba.bull_id = $1
+      ORDER BY ba.created_at DESC`,
+      [req.params.id],
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error('Error in GET bull batches:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });

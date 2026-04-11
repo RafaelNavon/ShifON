@@ -1,0 +1,326 @@
+/* ── Page shell ────────────────────────── */
+.bulls-page {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 28px 28px 40px;
+  gap: 24px;
+  min-width: 0;
+}
+
+.bulls-status {
+  text-align: center;
+  color: var(--text);
+  padding: 40px 0;
+  font-size: 15px;
+  margin: 0;
+}
+
+.bulls-status--error {
+  color: #ef4444;
+}
+
+/* ── Grid ──────────────────────────────── */
+.bulls-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+/* ── Bull card ─────────────────────────── */
+.bull-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  text-align: left;
+  cursor: pointer;
+  font-family: var(--sans);
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+
+.bull-card:hover {
+  box-shadow: 0 0 0 2px var(--accent-border);
+  border-color: var(--accent-border);
+}
+
+.bull-card--selected {
+  box-shadow: 0 0 0 2px var(--accent) !important;
+  border-color: var(--accent) !important;
+}
+
+.bull-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+/* ── Status badge ──────────────────────── */
+.bull-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.bull-badge--active {
+  background: rgba(34, 197, 94, 0.12);
+  color: #16a34a;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.bull-badge--inactive {
+  background: var(--code-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+@media (prefers-color-scheme: dark) {
+  .bull-badge--active {
+    background: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+    border-color: rgba(34, 197, 94, 0.35);
+  }
+}
+
+.bull-code-tag {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+  font-family: var(--mono);
+  background: var(--code-bg);
+  padding: 2px 7px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.bull-card-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-h);
+  line-height: 1.3;
+  letter-spacing: -0.2px;
+}
+
+.bull-card-breed {
+  font-size: 12px;
+  color: var(--text);
+}
+
+.bull-card-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 6px;
+}
+
+.bull-straw-count {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-h);
+}
+
+.bull-last-date {
+  font-size: 11px;
+  color: var(--text);
+}
+
+.bull-edit-btn {
+  margin-top: 10px;
+  padding: 5px 12px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 500;
+  font-family: var(--sans);
+  cursor: pointer;
+  align-self: flex-start;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.bull-edit-btn:hover {
+  background: var(--code-bg);
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+
+/* ── Panel: status badge variants ──────── */
+.bull-status-active {
+  color: #16a34a;
+}
+
+.bull-status-inactive {
+  color: var(--text);
+}
+
+@media (prefers-color-scheme: dark) {
+  .bull-status-active {
+    color: #4ade80;
+  }
+}
+
+/* Notes field — allow wrapping */
+.panel-field--block {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.panel-field--block dd {
+  text-align: left;
+  word-break: break-word;
+  white-space: pre-wrap;
+  font-size: 13px;
+  color: var(--text-h);
+  margin: 0;
+  font-weight: 500;
+}
+
+/* Can't delete notice */
+.bull-cant-delete {
+  font-size: 12px;
+  color: var(--text);
+  font-style: italic;
+  align-self: center;
+}
+
+/* ── Bull batches in panel ─────────────── */
+.bull-batches-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bull-batches-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text);
+}
+
+.bull-batches-msg {
+  font-size: 13px;
+  color: var(--text);
+  margin: 0;
+}
+
+.bull-batches-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bull-batch-item {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.bull-batch-location {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.bull-batch-meta {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+/* Status dot — scoped to avoid conflict with .status-approved slot cell rules */
+.bull-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: none !important;
+}
+
+.bull-status-dot.status-approved {
+  background: #22c55e;
+}
+
+.bull-status-dot.status-skew {
+  background: #f59e0b;
+}
+
+.bull-status-dot.status-rejected {
+  background: #ef4444;
+}
+
+.bull-batch-qty {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.bull-batch-sio {
+  font-size: 11px;
+  color: var(--text);
+  font-family: var(--mono);
+  background: var(--bg);
+  padding: 1px 5px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+}
+
+/* ── Modal: textarea + optional label ──── */
+.mfield-optional {
+  font-weight: 400;
+  color: var(--text);
+  font-size: 11px;
+}
+
+.mfield textarea {
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--bg);
+  color: var(--text-h);
+  font-size: 14px;
+  font-family: var(--sans);
+  outline: none;
+  resize: vertical;
+  min-height: 72px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.mfield textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-bg);
+}
+
+.mfield textarea::placeholder {
+  color: var(--text);
+  opacity: 0.5;
+}
+
+/* ── Mobile ────────────────────────────── */
+@media (max-width: 768px) {
+  .bulls-page {
+    padding: 16px 16px 32px;
+    gap: 16px;
+  }
+
+  .bulls-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 10px;
+  }
+}
