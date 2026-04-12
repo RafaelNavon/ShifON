@@ -1,8 +1,13 @@
 import { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { apiFetch } from '../utils/api'
 import './Layout.css'
 
 const NAV = [
+  {
+    to: '/dashboard', label: 'Dashboard',
+    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+  },
   {
     to: '/inventory', label: 'Inventory',
     icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>,
@@ -23,14 +28,11 @@ const NAV = [
     to: '/tasks', label: 'Tasks',
     icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>,
   },
-  {
-    to: '/team', label: 'Team',
-    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
-  },
 ]
 
 export default function Layout() {
   const [open, setOpen] = useState(false)
+  const [inviteModal, setInviteModal] = useState(false)
   const navigate = useNavigate()
   const user = JSON.parse(localStorage.getItem('user') || '{}')
 
@@ -73,6 +75,11 @@ export default function Layout() {
               <span className="user-role">{user.role}</span>
             </div>
           </div>
+          {user.role === 'admin' && (
+            <button className="sidebar-invite" onClick={() => setInviteModal(true)}>
+              + Invite someone
+            </button>
+          )}
           <button className="sidebar-logout" onClick={logout}>Sign out</button>
         </div>
       </aside>
@@ -82,6 +89,73 @@ export default function Layout() {
           <span /><span /><span />
         </button>
         <Outlet />
+      </div>
+
+      {inviteModal && <InviteModal onClose={() => setInviteModal(false)} />}
+    </div>
+  )
+}
+
+function InviteModal({ onClose }) {
+  const [link, setLink] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [copied, setCopied] = useState(false)
+
+  useState(() => {
+    apiFetch('/api/invite/create', { method: 'POST' })
+      .then((r) => r?.json())
+      .then((d) => {
+        if (d?.link) setLink(d.link)
+        else setError(d?.error || 'Failed to create invite')
+        setLoading(false)
+      })
+      .catch(() => {
+        setError('Network error')
+        setLoading(false)
+      })
+  }, [])
+
+  function copyLink() {
+    navigator.clipboard.writeText(link).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
+
+  return (
+    <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="modal" role="dialog" aria-modal="true">
+        <div className="modal-header">
+          <h2>Invite someone</h2>
+          <button className="modal-close" onClick={onClose} aria-label="Close">✕</button>
+        </div>
+        <div className="modal-form">
+          {loading && <p style={{ color: 'var(--text)', margin: 0 }}>Generating link…</p>}
+          {error && <p style={{ color: '#ef4444', margin: 0 }}>{error}</p>}
+          {link && (
+            <>
+              <p style={{ fontSize: '13px', color: 'var(--text)', margin: '0 0 10px' }}>
+                Share this link. It expires in <strong>48 hours</strong>.
+              </p>
+              <div className="invite-link-row">
+                <input
+                  type="text"
+                  className="invite-link-input"
+                  value={link}
+                  readOnly
+                  onClick={(e) => e.target.select()}
+                />
+                <button className="btn-primary" onClick={copyLink}>
+                  {copied ? 'Copied!' : 'Copy link'}
+                </button>
+              </div>
+            </>
+          )}
+          <div className="modal-actions" style={{ marginTop: '16px' }}>
+            <button className="btn-ghost" onClick={onClose}>Close</button>
+          </div>
+        </div>
       </div>
     </div>
   )

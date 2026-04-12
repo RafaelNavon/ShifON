@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import './Login.css'
 
 export default function Login() {
@@ -8,6 +8,8 @@ export default function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+  const [params] = useSearchParams()
+  const successMsg = params.get('success')
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -43,6 +45,8 @@ export default function Login() {
         </div>
         <p className="login-subtitle">Lab Management System</p>
 
+        {successMsg && <p className="login-success">{successMsg}</p>}
+
         <form className="login-form" onSubmit={handleSubmit}>
           <div className="field">
             <label htmlFor="email">Email</label>
@@ -67,6 +71,7 @@ export default function Login() {
               placeholder="••••••••"
               required
             />
+            <Link to="/forgot-password" className="forgot-link">Forgot password?</Link>
           </div>
 
           {error && <p className="login-error">{error}</p>}

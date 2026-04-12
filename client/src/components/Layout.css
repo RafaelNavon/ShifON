@@ -163,6 +163,24 @@
   text-transform: capitalize;
 }
 
+.sidebar-invite {
+  padding: 7px;
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  border-radius: 6px;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--sans);
+  cursor: pointer;
+  width: 100%;
+  transition: opacity 0.15s;
+}
+
+.sidebar-invite:hover {
+  opacity: 0.8;
+}
+
 .sidebar-logout {
   padding: 7px;
   background: transparent;
@@ -212,6 +230,26 @@
 
 .sidebar-overlay {
   display: none;
+}
+
+/* ── Invite link modal ─────────────────── */
+.invite-link-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.invite-link-input {
+  flex: 1;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--code-bg);
+  color: var(--text-h);
+  font-size: 13px;
+  font-family: var(--mono);
+  outline: none;
+  min-width: 0;
 }
 
 /* ── Mobile ────────────────────────────── */
