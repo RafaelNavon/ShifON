@@ -3,6 +3,8 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import './Login.css'
 import './Signup.css'
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 function passwordStrength(p) {
@@ -32,7 +34,7 @@ export default function Signup() {
 
   useEffect(() => {
     if (!token) { setTokenStatus('invalid'); return }
-    fetch(`http://localhost:5000/api/invite/validate/${token}`)
+    fetch(`${API_URL}/api/invite/validate/${token}`)
       .then((r) => r.json())
       .then((d) => setTokenStatus(d.valid ? 'valid' : 'invalid'))
       .catch(() => setTokenStatus('invalid'))
@@ -59,7 +61,7 @@ export default function Signup() {
     setSubmitting(true)
     setSubmitError('')
     try {
-      const res = await fetch('http://localhost:5000/api/invite/signup', {
+      const res = await fetch(`${API_URL}/api/invite/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

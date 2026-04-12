@@ -3,6 +3,8 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import './Login.css'
 import './Signup.css'
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+
 function passwordStrength(p) {
   if (!p) return { score: 0, label: '', color: '' }
   let score = 0
@@ -30,7 +32,7 @@ export default function ResetPassword() {
 
   useEffect(() => {
     if (!token) { setTokenStatus('invalid'); return }
-    fetch(`http://localhost:5000/api/auth/reset-password/${token}`)
+    fetch(`${API_URL}/api/auth/reset-password/${token}`)
       .then((r) => r.json())
       .then((d) => setTokenStatus(d.valid ? 'valid' : 'invalid'))
       .catch(() => setTokenStatus('invalid'))
@@ -43,7 +45,7 @@ export default function ResetPassword() {
     setError('')
     setSubmitting(true)
     try {
-      const res = await fetch('http://localhost:5000/api/auth/reset-password', {
+      const res = await fetch(`${API_URL}/api/auth/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, password, confirmPassword: confirm }),

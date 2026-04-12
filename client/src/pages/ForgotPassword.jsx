@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import './Login.css'
 import './Signup.css'
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+
 export default function ForgotPassword() {
   const [email, setEmail] = useState('')
   const [submitted, setSubmitted] = useState(false)
@@ -12,7 +14,7 @@ export default function ForgotPassword() {
     e.preventDefault()
     setLoading(true)
     try {
-      await fetch('http://localhost:5000/api/auth/forgot-password', {
+      await fetch(`${API_URL}/api/auth/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
