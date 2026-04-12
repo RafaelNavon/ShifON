@@ -4,6 +4,8 @@ const cors = require('cors');
 const pool = require('./db');
 
 const authRoutes = require('./routes/auth');
+const inviteRoutes = require('./routes/invite');
+const passwordResetRoutes = require('./routes/passwordReset');
 const bullRoutes = require('./routes/bulls');
 const containerRoutes = require('./routes/containers');
 const batchRoutes = require('./routes/batches');
@@ -11,6 +13,7 @@ const shipmentRoutes = require('./routes/shipments');
 const dailyLogRoutes = require('./routes/daily_logs');
 const taskRoutes = require('./routes/tasks');
 const userRoutes = require('./routes/users');
+const dashboardRoutes = require('./routes/dashboard');
 
 const app = express();
 
@@ -18,6 +21,8 @@ app.use(cors({ origin: 'http://localhost:5173' }));
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);
+app.use('/api/auth', passwordResetRoutes);
+app.use('/api/invite', inviteRoutes);
 app.use('/api/bulls', bullRoutes);
 app.use('/api/containers', containerRoutes);
 app.use('/api/batches', batchRoutes);
@@ -25,6 +30,7 @@ app.use('/api/shipments', shipmentRoutes);
 app.use('/api/daily-logs', dailyLogRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
