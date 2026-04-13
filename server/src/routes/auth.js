@@ -36,11 +36,16 @@ router.post("/login", async (req, res) => {
     return res.status(400).json({ error: "email and password are required" });
   }
   try {
-    const { rows } = await pool.query("SELECT * FROM users WHERE email = $1", [
-      email,
-    ]);
+    console.log('[auth/login] looking up email:', email);
+    const { rows } = await pool.query(
+      "SELECT * FROM users WHERE LOWER(email) = LOWER($1)",
+      [email],
+    );
     const user = rows[0];
-    if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+    console.log('[auth/login] user found:', !!user);
+    const passwordMatch = !!user && (await bcrypt.compare(password, user.password_hash));
+    console.log('[auth/login] password match:', passwordMatch);
+    if (!user || !passwordMatch) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
     const token = jwt.sign(

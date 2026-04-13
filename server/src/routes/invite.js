@@ -83,7 +83,10 @@ router.post('/signup', async (req, res) => {
     }
 
     const bcrypt = require('bcrypt');
+    console.log('[invite/signup] password length:', password.length);
     const password_hash = await bcrypt.hash(password, 10);
+    console.log('[invite/signup] hash prefix:', password_hash.substring(0, 10));
+    console.log('[invite/signup] saving email:', email.toLowerCase());
     await client.query(
       `INSERT INTO users (name, email, password_hash, role) VALUES ($1, $2, $3, 'staff')`,
       [name.trim(), email.toLowerCase(), password_hash],
