@@ -5,6 +5,10 @@ const pool = require("../db");
 
 const router = express.Router();
 
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
 // POST /api/auth/register
 router.post("/register", async (req, res) => {
   const { name, email, password, role } = req.body;
@@ -13,11 +17,29 @@ router.post("/register", async (req, res) => {
       .status(400)
       .json({ error: "name, email and password are required" });
   }
+  if (!isValidEmail(email)) {
+    return res.status(400).json({ error: "Invalid email address" });
+  }
+  if (password.length < 8) {
+    return res
+      .status(400)
+      .json({ error: "Password must be at least 8 characters" });
+  }
+  if (!/[A-Z]/.test(password)) {
+    return res
+      .status(400)
+      .json({ error: "Password must contain at least one uppercase letter" });
+  }
+  if (!/[0-9]/.test(password)) {
+    return res
+      .status(400)
+      .json({ error: "Password must contain at least one number" });
+  }
   try {
     const password_hash = await bcrypt.hash(password, 10);
     const { rows } = await pool.query(
       "INSERT INTO users (name, email, password_hash, role) VALUES ($1, $2, $3, $4) RETURNING id, name, email, role",
-      [name, email, password_hash, role || "staff"],
+      [name, email.toLowerCase(), password_hash, role || "staff"],
     );
     res.status(201).json(rows[0]);
   } catch (err) {
@@ -36,16 +58,13 @@ router.post("/login", async (req, res) => {
     return res.status(400).json({ error: "email and password are required" });
   }
   try {
-    console.log("[auth/login] looking up email:", email);
     const { rows } = await pool.query(
       "SELECT * FROM users WHERE LOWER(email) = LOWER($1)",
       [email],
     );
     const user = rows[0];
-    console.log("[auth/login] user found:", !!user);
     const passwordMatch =
       !!user && (await bcrypt.compare(password, user.password_hash));
-    console.log("[auth/login] password match:", passwordMatch);
     if (!user || !passwordMatch) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
