@@ -36,22 +36,23 @@ router.post("/login", async (req, res) => {
     return res.status(400).json({ error: "email and password are required" });
   }
   try {
-    console.log('[auth/login] looking up email:', email);
+    console.log("[auth/login] looking up email:", email);
     const { rows } = await pool.query(
       "SELECT * FROM users WHERE LOWER(email) = LOWER($1)",
       [email],
     );
     const user = rows[0];
-    console.log('[auth/login] user found:', !!user);
-    const passwordMatch = !!user && (await bcrypt.compare(password, user.password_hash));
-    console.log('[auth/login] password match:', passwordMatch);
+    console.log("[auth/login] user found:", !!user);
+    const passwordMatch =
+      !!user && (await bcrypt.compare(password, user.password_hash));
+    console.log("[auth/login] password match:", passwordMatch);
     if (!user || !passwordMatch) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role, name: user.name },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || "7d" },
+      { expiresIn: process.env.JWT_EXPIRES_IN || "30d" },
     );
     res.json({
       token,
