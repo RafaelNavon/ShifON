@@ -1,7 +1,8 @@
-const nodemailer = require('nodemailer');
-
+const nodemailer = require("nodemailer");
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false,
   auth: {
     user: process.env.GMAIL_USER,
     pass: process.env.GMAIL_APP_PASSWORD,
@@ -12,7 +13,7 @@ async function sendPasswordResetEmail(toEmail, resetLink) {
   await transporter.sendMail({
     from: `"ShifON" <${process.env.GMAIL_USER}>`,
     to: toEmail,
-    subject: 'ShifON - Password Reset',
+    subject: "ShifON - Password Reset",
     html: `
       <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px; background: #f9fafb; border-radius: 12px;">
         <h2 style="margin: 0 0 8px; font-size: 22px; color: #111;">Reset your password</h2>
@@ -24,8 +25,7 @@ async function sendPasswordResetEmail(toEmail, resetLink) {
           Reset Password
         </a>
         <p style="margin: 24px 0 0; color: #888; font-size: 13px;">
-          If you didn't request this, you can safely ignore this email.
-          <br/>
+          If you didn't request this, you can safely ignore this email.<br/>
           Or paste this link into your browser: <a href="${resetLink}" style="color: #2563eb;">${resetLink}</a>
         </p>
       </div>
