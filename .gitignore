@@ -1,3 +1,8 @@
 node_modules/
 .env
 dist/
+client/Dockerfile
+client/.dockerignore
+server/Dockerfile
+server/.dockerignore
+docker-compose.yml
