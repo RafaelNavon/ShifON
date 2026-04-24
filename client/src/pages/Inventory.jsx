@@ -171,9 +171,13 @@ function ContainerCard({ container, selectedSlotId, onSelect }) {
   const cols = Array.from({ length: maxSlot }, (_, i) => i + 1);
 
   return (
-    <div className="container-card">
+    <div
+      className="container-card"
+      style={maxSlot > 6 ? { gridColumn: "1 / -1" } : undefined}>
       <div className="container-title">{container.name}</div>
-      <div className="slot-grid">
+      <div
+        className="slot-grid"
+        style={{ gridTemplateColumns: `20px repeat(${maxSlot}, 1fr)` }}>
         <div className="slot-row-label" />
         {cols.map((n) => (
           <div key={n} className="slot-col-header">

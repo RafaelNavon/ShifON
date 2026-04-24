@@ -127,8 +127,7 @@
 /* ── Slot grid ─────────────────────────── */
 .slot-grid {
   display: grid;
-  /* label col + 6 slot cols */
-  grid-template-columns: 20px repeat(6, 1fr);
+  /* grid-template-columns is set via inline style on the element */
   grid-template-rows: 18px repeat(2, 60px);
   gap: 4px;
 }
