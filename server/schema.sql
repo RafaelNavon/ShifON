@@ -87,17 +87,25 @@ CREATE TABLE tasks (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Seed containers (always exactly 5)
+-- Seed containers (always exactly 4)
 INSERT INTO containers (name) VALUES
-  ('Container 90'),
   ('Container 91'),
   ('Container 92'),
   ('Container 93'),
   ('Container 94');
 
--- Seed all 60 slot positions (5 containers × 6 slots × 2 positions)
+-- Seed slots for containers 91, 92, 93 (6 slots × 2 positions)
 INSERT INTO slots (container_id, slot_number, position)
 SELECT c.id, s.slot_number, p.position
 FROM containers c
 CROSS JOIN (SELECT generate_series(1, 6) AS slot_number) s
-CROSS JOIN (VALUES ('UP'), ('DOWN')) p(position);
+CROSS JOIN (VALUES ('UP'), ('DOWN')) p(position)
+WHERE c.name IN ('Container 91', 'Container 92', 'Container 93');
+
+-- Seed slots for container 94 (10 slots × 2 positions)
+INSERT INTO slots (container_id, slot_number, position)
+SELECT c.id, s.slot_number, p.position
+FROM containers c
+CROSS JOIN (SELECT generate_series(1, 10) AS slot_number) s
+CROSS JOIN (VALUES ('UP'), ('DOWN')) p(position)
+WHERE c.name = 'Container 94';
