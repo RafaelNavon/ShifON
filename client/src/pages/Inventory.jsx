@@ -159,26 +159,29 @@ export default function Inventory() {
 }
 
 function ContainerCard({ container, selectedSlotId, onSelect }) {
-  // Index slots by slot_number + position for O(1) lookup
   const index = {};
   for (const slot of container.slots || []) {
     index[`${slot.slot_number}-${slot.position}`] = slot;
   }
 
+  const maxSlot = Math.max(
+    ...(container.slots || []).map((s) => s.slot_number),
+    6,
+  );
+  const cols = Array.from({ length: maxSlot }, (_, i) => i + 1);
+
   return (
     <div className="container-card">
       <div className="container-title">{container.name}</div>
       <div className="slot-grid">
-        {/* Column headers */}
         <div className="slot-row-label" />
-        {[1, 2, 3, 4, 5, 6].map((n) => (
+        {cols.map((n) => (
           <div key={n} className="slot-col-header">
             {n}
           </div>
         ))}
-        {/* UP row */}
         <div className="slot-row-label">↑</div>
-        {[1, 2, 3, 4, 5, 6].map((n) => {
+        {cols.map((n) => {
           const slot = index[`${n}-UP`];
           return (
             <SlotCell
@@ -191,9 +194,8 @@ function ContainerCard({ container, selectedSlotId, onSelect }) {
             />
           );
         })}
-        {/* DOWN row */}
         <div className="slot-row-label">↓</div>
-        {[1, 2, 3, 4, 5, 6].map((n) => {
+        {cols.map((n) => {
           const slot = index[`${n}-DOWN`];
           return (
             <SlotCell
