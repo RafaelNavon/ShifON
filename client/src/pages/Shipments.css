@@ -147,6 +147,12 @@
   padding: 4px 0;
 }
 
+.ship-detail-actions {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
 /* ── Items sub-table ───────────────────── */
 .ship-items-table {
   width: 100%;

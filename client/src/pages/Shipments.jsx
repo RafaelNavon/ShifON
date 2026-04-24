@@ -25,6 +25,10 @@ export default function Shipments() {
   const [error, setError] = useState('')
   const [expandedId, setExpandedId] = useState(null)
   const [modalOpen, setModalOpen] = useState(false)
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
+  const user = JSON.parse(localStorage.getItem('user') || '{}')
 
   const fetchShipments = useCallback(() => {
     setLoading(true)
@@ -50,6 +54,29 @@ export default function Shipments() {
 
   function toggleRow(id) {
     setExpandedId((prev) => (prev === id ? null : id))
+    setDeleteConfirmId(null)
+    setDeleteError('')
+  }
+
+  async function deleteShipment(id) {
+    setDeleting(true)
+    setDeleteError('')
+    try {
+      const res = await apiFetch(`/api/shipments/${id}`, { method: 'DELETE' })
+      if (!res) return
+      if (!res.ok) {
+        const d = await res.json()
+        setDeleteError(d.error || 'Delete failed')
+        setDeleting(false)
+        return
+      }
+      setDeleteConfirmId(null)
+      setExpandedId(null)
+      fetchShipments()
+    } catch {
+      setDeleteError('Network error')
+      setDeleting(false)
+    }
   }
 
   return (
@@ -145,6 +172,43 @@ export default function Shipments() {
                                     ))}
                                   </tbody>
                                 </table>
+                              )}
+                              {user.role === 'admin' && (
+                                <div className="ship-detail-actions">
+                                  {deleteConfirmId === s.id ? (
+                                    <div className="delete-confirm">
+                                      <span className="delete-confirm-text">
+                                        Delete this shipment record? This cannot be undone.
+                                      </span>
+                                      {deleteError && (
+                                        <span className="delete-error">{deleteError}</span>
+                                      )}
+                                      <div className="delete-confirm-btns">
+                                        <button
+                                          className="btn-ghost"
+                                          onClick={() => { setDeleteConfirmId(null); setDeleteError('') }}
+                                          disabled={deleting}
+                                        >
+                                          Cancel
+                                        </button>
+                                        <button
+                                          className="btn-danger"
+                                          onClick={() => deleteShipment(s.id)}
+                                          disabled={deleting}
+                                        >
+                                          {deleting ? 'Deleting…' : 'Confirm Delete'}
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <button
+                                      className="btn-danger-ghost"
+                                      onClick={() => setDeleteConfirmId(s.id)}
+                                    >
+                                      Delete shipment
+                                    </button>
+                                  )}
+                                </div>
                               )}
                             </div>
                           </td>
