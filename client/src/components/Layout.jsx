@@ -33,6 +33,7 @@ const NAV = [
 export default function Layout() {
   const [open, setOpen] = useState(false)
   const [inviteModal, setInviteModal] = useState(false)
+  const [theme, setTheme] = useState(() => document.documentElement.getAttribute('data-theme') || 'light')
   const navigate = useNavigate()
   const user = JSON.parse(localStorage.getItem('user') || '{}')
 
@@ -40,6 +41,13 @@ export default function Layout() {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
     navigate('/login')
+  }
+
+  function toggleTheme() {
+    const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'
+    document.documentElement.setAttribute('data-theme', next)
+    localStorage.setItem('theme', next)
+    setTheme(next)
   }
 
   return (
@@ -68,6 +76,9 @@ export default function Layout() {
         </nav>
 
         <div className="sidebar-footer">
+          <button className="sidebar-theme-toggle" onClick={toggleTheme}>
+            {theme === 'dark' ? '☀️ Light mode' : '🌙 Dark mode'}
+          </button>
           <div className="sidebar-user">
             <div className="user-avatar">{(user.name || 'U')[0].toUpperCase()}</div>
             <div className="user-info">

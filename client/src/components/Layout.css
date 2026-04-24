@@ -181,6 +181,24 @@
   opacity: 0.8;
 }
 
+.sidebar-theme-toggle {
+  padding: 8px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 16px;
+  font-family: var(--sans);
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.sidebar-theme-toggle:hover {
+  background: var(--code-bg);
+}
+
 .sidebar-logout {
   padding: 7px;
   background: transparent;
