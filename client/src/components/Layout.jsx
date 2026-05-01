@@ -67,7 +67,7 @@ export default function Layout() {
               key={to}
               to={to}
               className={({ isActive }) => `nav-item${isActive ? ' nav-item--active' : ''}`}
-              onClick={() => setOpen(false)}
+              onClick={() => setTimeout(() => setOpen(false), 50)}
             >
               <span className="nav-icon">{icon}</span>
               {label}
