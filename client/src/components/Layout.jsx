@@ -52,7 +52,7 @@ export default function Layout() {
 
   return (
     <div className="layout">
-      {open && <div className="sidebar-overlay" onClick={() => setOpen(false)} />}
+      {open && <div className="sidebar-overlay" />}
 
       <aside className={`sidebar${open ? ' sidebar--open' : ''}`}>
         <div className="sidebar-header">
@@ -67,7 +67,7 @@ export default function Layout() {
               key={to}
               to={to}
               className={({ isActive }) => `nav-item${isActive ? ' nav-item--active' : ''}`}
-              onClick={() => setTimeout(() => setOpen(false), 50)}
+              onClick={() => { setOpen(false) }}
             >
               <span className="nav-icon">{icon}</span>
               {label}
