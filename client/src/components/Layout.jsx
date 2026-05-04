@@ -56,7 +56,7 @@ export default function Layout() {
 
       <aside className={`sidebar${open ? ' sidebar--open' : ''}`}>
         <div className="sidebar-header">
-          <span className="sidebar-logo">S</span>
+          <img src="/icon-512.png" alt="ShifON" className="sidebar-logo-img" />
           <span className="sidebar-brand">ShifON</span>
           <button className="sidebar-close" onClick={() => setOpen(false)} aria-label="Close">✕</button>
         </div>
