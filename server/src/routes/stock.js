@@ -102,6 +102,111 @@ router.put('/:itemId/count', async (req, res) => {
   }
 });
 
+// PUT /api/stock/counts — bulk upsert
+router.put('/counts', async (req, res) => {
+  const { counts } = req.body;
+
+  if (!Array.isArray(counts)) {
+    return res.status(400).json({ error: 'counts must be an array' });
+  }
+  if (counts.length === 0) {
+    return res.status(400).json({ error: 'counts cannot be empty' });
+  }
+  if (counts.length > 100) {
+    return res.status(400).json({ error: 'too many counts in one request' });
+  }
+
+  const invalid = [];
+  const validated = counts.map((entry, i) => {
+    let { stock_item_id, unit_type, quantity, is_full, notes } = entry;
+    const errors = [];
+
+    if (!Number.isInteger(stock_item_id) || stock_item_id <= 0) {
+      errors.push('stock_item_id must be a positive integer');
+    }
+    if (!['units', 'boxes'].includes(unit_type)) {
+      errors.push('unit_type must be "units" or "boxes"');
+    }
+    if (is_full === undefined || is_full === null) {
+      is_full = false;
+    } else if (typeof is_full !== 'boolean') {
+      errors.push('is_full must be a boolean');
+    }
+    if (quantity !== undefined && quantity !== null) {
+      if (!Number.isInteger(quantity) || quantity < 0) {
+        errors.push('quantity must be a non-negative integer or null');
+      }
+    } else {
+      quantity = null;
+    }
+    if (errors.length === 0 && quantity === null && !is_full) {
+      errors.push('at least one of quantity or is_full must be provided');
+    }
+    notes = notes || null;
+
+    if (errors.length > 0) {
+      errors.forEach(reason => invalid.push({ index: i, reason }));
+      return null;
+    }
+    return { stock_item_id, unit_type, quantity, is_full, notes };
+  });
+
+  if (invalid.length > 0) {
+    return res.status(400).json({ error: 'Validation failed', invalid });
+  }
+
+  const itemIds = validated.map(e => e.stock_item_id);
+  const { rows: foundRows } = await pool.query(
+    'SELECT id FROM stock_items WHERE id = ANY($1::int[])',
+    [itemIds],
+  );
+  const foundIds = new Set(foundRows.map(r => r.id));
+  const missingIds = itemIds.filter(id => !foundIds.has(id));
+  if (missingIds.length > 0) {
+    return res.status(400).json({ error: 'Some items not found', missing_ids: missingIds });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    for (const entry of validated) {
+      await client.query(
+        `INSERT INTO stock_counts (stock_item_id, unit_type, quantity, is_full, notes, counted_by, counted_at)
+         VALUES ($1, $2, $3, $4, $5, $6, NOW())
+         ON CONFLICT (stock_item_id) DO UPDATE SET
+           unit_type = EXCLUDED.unit_type,
+           quantity = EXCLUDED.quantity,
+           is_full = EXCLUDED.is_full,
+           notes = EXCLUDED.notes,
+           counted_by = EXCLUDED.counted_by,
+           counted_at = EXCLUDED.counted_at`,
+        [entry.stock_item_id, entry.unit_type, entry.quantity, entry.is_full, entry.notes, req.user.id],
+      );
+    }
+    await client.query('COMMIT');
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    console.error('Error in PUT bulk stock counts:', err);
+    return res.status(500).json({ error: 'Server error' });
+  } finally {
+    client.release();
+  }
+
+  try {
+    const { rows: updated } = await pool.query(
+      `SELECT sc.*, u.name AS counted_by_name
+       FROM stock_counts sc
+       LEFT JOIN users u ON u.id = sc.counted_by
+       WHERE sc.stock_item_id = ANY($1::int[])`,
+      [itemIds],
+    );
+    res.json({ updated });
+  } catch (err) {
+    console.error('Error fetching updated stock counts:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // POST /api/stock/items — admin only
 router.post('/items', requireAdmin, async (req, res) => {
   const name = (req.body.name || '').trim();
