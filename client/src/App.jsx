@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import Inventory from "./pages/Inventory";
 import Bulls from "./pages/Bulls";
 import Shipments from "./pages/Shipments";
+import Stock from "./pages/Stock";
 import DailyLog from "./pages/DailyLog";
 import Tasks from "./pages/Tasks";
 
@@ -35,6 +36,7 @@ export default function App() {
           <Route path="/inventory" element={<Inventory />} />
           <Route path="/bulls" element={<Bulls />} />
           <Route path="/shipments" element={<Shipments />} />
+          <Route path="/stock" element={<Stock />} />
           <Route path="/daily-log" element={<DailyLog />} />
           <Route path="/tasks" element={<Tasks />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
