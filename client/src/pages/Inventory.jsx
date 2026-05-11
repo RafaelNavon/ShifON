@@ -10,7 +10,7 @@ const STATUS_COLOR = {
   rejected: "status-rejected",
 };
 
-const STATUS_LABEL = {
+const   STATUS_LABEL = {
   approved: "Approved",
   skew: "Skew",
   rejected: "Rejected",
