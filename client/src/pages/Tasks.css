@@ -39,6 +39,12 @@
   min-height: 120px;
 }
 
+.task-column--drop-over {
+  background: rgba(59, 130, 246, 0.05);
+  outline: 2px dashed rgba(59, 130, 246, 0.4);
+  outline-offset: -2px;
+}
+
 .task-col-header {
   display: flex;
   align-items: center;
@@ -110,9 +116,13 @@
   flex-direction: column;
   gap: 6px;
   text-align: left;
-  cursor: pointer;
+  cursor: grab;
   font-family: var(--sans);
   transition: box-shadow 0.15s, border-color 0.15s;
+}
+
+.task-card:active {
+  cursor: grabbing;
 }
 
 .task-card:hover {
@@ -123,6 +133,15 @@
 .task-card--selected {
   box-shadow: 0 0 0 2px var(--accent) !important;
   border-color: var(--accent) !important;
+}
+
+.task-card--locked {
+  cursor: not-allowed;
+  opacity: 0.85;
+}
+
+.task-card--locked:hover {
+  cursor: not-allowed;
 }
 
 .task-card--overdue {

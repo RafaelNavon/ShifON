@@ -52,27 +52,49 @@ router.put('/:id', async (req, res) => {
   const { title, description, status, due_date } = req.body;
   try {
     const { rows: [current] } = await pool.query(
-      'SELECT status FROM tasks WHERE id = $1',
+      'SELECT status, completed_by FROM tasks WHERE id = $1',
       [req.params.id],
     );
     if (!current) return res.status(404).json({ error: 'Task not found' });
 
     const newStatus = status ?? current.status;
-    const goingDone = newStatus === 'done' && current.status !== 'done';
     const leavingDone = newStatus !== 'done' && current.status === 'done';
+
+    if (leavingDone && req.user.role !== 'admin' && req.user.id !== current.completed_by) {
+      return res.status(403).json({
+        error: 'Only the original completer or an admin can reopen this task',
+      });
+    }
+
+    const goingDone = newStatus === 'done' && current.status !== 'done';
     const goingInProgress = newStatus === 'in_progress' && current.status !== 'in_progress';
     const leavingInProgress = newStatus !== 'in_progress' && current.status === 'in_progress';
 
     const { rows } = await pool.query(
-      `UPDATE tasks SET
-        title = COALESCE($1, title),
-        description = COALESCE($2, description),
-        status = COALESCE($3, status),
-        due_date = COALESCE($4, due_date),
-        completed_by = CASE WHEN $5 THEN $6::integer WHEN $7 THEN NULL ELSE completed_by END,
-        completed_at = CASE WHEN $5 THEN NOW() WHEN $7 THEN NULL ELSE completed_at END,
-        in_progress_by = CASE WHEN $8 THEN $6::integer WHEN $9 THEN NULL ELSE in_progress_by END
-       WHERE id = $10 RETURNING *`,
+      `WITH updated AS (
+         UPDATE tasks SET
+           title = COALESCE($1, title),
+           description = COALESCE($2, description),
+           status = COALESCE($3, status),
+           due_date = COALESCE($4, due_date),
+           completed_by = CASE WHEN $5 THEN $6::integer WHEN $7 THEN NULL ELSE completed_by END,
+           completed_at = CASE WHEN $5 THEN NOW() WHEN $7 THEN NULL ELSE completed_at END,
+           in_progress_by = CASE WHEN $8 THEN $6::integer WHEN $9 THEN NULL ELSE in_progress_by END
+         WHERE id = $10
+         RETURNING *
+       )
+       SELECT
+         t.id, t.title, t.description, t.assigned_to,
+         t.created_by, t.completed_by, t.in_progress_by,
+         t.status, t.created_at, t.completed_at,
+         TO_CHAR(t.due_date, 'YYYY-MM-DD') AS due_date,
+         c.name AS created_by_name,
+         cb.name AS completed_by_name,
+         u3.name AS in_progress_by_name
+       FROM updated t
+       LEFT JOIN users c ON c.id = t.created_by
+       LEFT JOIN users cb ON cb.id = t.completed_by
+       LEFT JOIN users u3 ON u3.id = t.in_progress_by`,
       [
         title || null,
         description || null,

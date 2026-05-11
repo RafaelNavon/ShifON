@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
+import { DndContext, PointerSensor, useSensor, useSensors, useDraggable, useDroppable } from '@dnd-kit/core'
+import { CSS } from '@dnd-kit/utilities'
 import { apiFetch } from '../utils/api'
 import './Tasks.css'
 
@@ -42,6 +44,16 @@ export default function Tasks() {
   // undefined = modal closed, null = add, object = edit
   const [modalTask, setModalTask] = useState(undefined)
 
+  const user = JSON.parse(localStorage.getItem('user') || '{}')
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    }),
+  )
+
   const panelTask = tasks.find((t) => t.id === panelTaskId) ?? null
 
   const fetchTasks = useCallback(() => {
@@ -74,6 +86,13 @@ export default function Tasks() {
     return s === today
   }).length
 
+  function canMoveTask(task) {
+    if (task.status !== 'done') return true
+    if (user.role === 'admin') return true
+    if (user.id === task.completed_by) return true
+    return false
+  }
+
   function handleModalSuccess() {
     setModalTask(undefined)
     fetchTasks()
@@ -82,6 +101,49 @@ export default function Tasks() {
   function handleDeleted() {
     setPanelTaskId(null)
     fetchTasks()
+  }
+
+  async function handleDragEnd(event) {
+    const { active, over } = event
+    if (!over) return
+
+    const draggedTask = active.data.current?.task
+    const targetStatus = over.data.current?.status
+    if (!draggedTask || !targetStatus) return
+    if (draggedTask.status === targetStatus) return
+
+    if (!canMoveTask(draggedTask)) {
+      alert('Only the original completer or an admin can reopen this task')
+      return
+    }
+
+    const previousTasks = tasks
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.id === draggedTask.id ? { ...t, status: targetStatus } : t,
+      ),
+    )
+
+    try {
+      const res = await apiFetch(`/api/tasks/${draggedTask.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ status: targetStatus }),
+      })
+      if (!res) return
+      const updated = await res.json()
+      if (!res.ok) {
+        setTasks(previousTasks)
+        console.error('Error updating task status:', updated)
+        alert(updated.error || 'Failed to update task status')
+        return
+      }
+      setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)))
+      fetchTasks()  // safety net — refetch in case server response was incomplete
+    } catch (err) {
+      console.error('Network error updating task status:', err)
+      setTasks(previousTasks)
+      alert('Network error — could not update task status')
+    }
   }
 
   return (
@@ -112,29 +174,34 @@ export default function Tasks() {
       {error && <p className="tasks-status tasks-status--error">{error}</p>}
 
       {!loading && !error && (
-        <div className="tasks-board">
-          <TaskColumn
-            title="Pending"
-            status="pending"
-            tasks={pending}
-            onSelect={setPanelTaskId}
-            selectedId={panelTaskId}
-          />
-          <TaskColumn
-            title="In Progress"
-            status="in_progress"
-            tasks={inProgress}
-            onSelect={setPanelTaskId}
-            selectedId={panelTaskId}
-          />
-          <TaskColumn
-            title="Done"
-            status="done"
-            tasks={done}
-            onSelect={setPanelTaskId}
-            selectedId={panelTaskId}
-          />
-        </div>
+        <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+          <div className="tasks-board">
+            <TaskColumn
+              title="Pending"
+              status="pending"
+              tasks={pending}
+              onSelect={setPanelTaskId}
+              selectedId={panelTaskId}
+              canMoveTask={canMoveTask}
+            />
+            <TaskColumn
+              title="In Progress"
+              status="in_progress"
+              tasks={inProgress}
+              onSelect={setPanelTaskId}
+              selectedId={panelTaskId}
+              canMoveTask={canMoveTask}
+            />
+            <TaskColumn
+              title="Done"
+              status="done"
+              tasks={done}
+              onSelect={setPanelTaskId}
+              selectedId={panelTaskId}
+              canMoveTask={canMoveTask}
+            />
+          </div>
+        </DndContext>
       )}
 
       {panelTask && (
@@ -157,9 +224,14 @@ export default function Tasks() {
   )
 }
 
-function TaskColumn({ title, status, tasks, onSelect, selectedId }) {
+function TaskColumn({ title, status, tasks, onSelect, selectedId, canMoveTask }) {
+  const { isOver, setNodeRef } = useDroppable({
+    id: `column-${status}`,
+    data: { status },
+  })
+
   return (
-    <div className="task-column">
+    <div ref={setNodeRef} className={`task-column${isOver ? ' task-column--drop-over' : ''}`}>
       <div className={`task-col-header task-col-header--${status}`}>
         <span className="task-col-title">{title}</span>
         <span className="task-col-count">{tasks.length}</span>
@@ -174,6 +246,7 @@ function TaskColumn({ title, status, tasks, onSelect, selectedId }) {
             task={t}
             selected={t.id === selectedId}
             onSelect={() => onSelect(t.id)}
+            canMove={canMoveTask(t)}
           />
         ))}
       </div>
@@ -181,12 +254,26 @@ function TaskColumn({ title, status, tasks, onSelect, selectedId }) {
   )
 }
 
-function TaskCard({ task, selected, onSelect }) {
+function TaskCard({ task, selected, onSelect, canMove }) {
   const overdue = isOverdue(task)
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: `task-${task.id}`,
+    data: { task },
+    disabled: !canMove,
+  })
+
+  const style = {
+    transform: CSS.Translate.toString(transform),
+    opacity: isDragging ? 0.5 : 1,
+  }
 
   return (
     <button
-      className={`task-card${overdue ? ' task-card--overdue' : ''}${selected ? ' task-card--selected' : ''}`}
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className={`task-card${overdue ? ' task-card--overdue' : ''}${selected ? ' task-card--selected' : ''}${!canMove ? ' task-card--locked' : ''}`}
       onClick={onSelect}
     >
       <div className="task-card-title">{task.title}</div>
