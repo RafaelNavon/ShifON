@@ -2,6 +2,18 @@ const express = require("express");
 const pool = require("../db");
 const { authenticate } = require("../middleware/auth");
 
+const ALLOWED_STATUSES = [
+  "approved",
+  "skew_ptm",
+  "skew",
+  "disqualified",
+  "bacterial_contamination",
+  "c_ptb",
+  "ptm",
+  "reext",
+  "awaiting_response",
+];
+
 const router = express.Router();
 router.use(authenticate);
 
@@ -66,6 +78,11 @@ router.post("/", async (req, res) => {
       .status(400)
       .json({ error: "bull_id, slot_id, and quantity are required" });
   }
+  if (status !== undefined && !ALLOWED_STATUSES.includes(status)) {
+    return res
+      .status(400)
+      .json({ error: `Invalid status. Must be one of: ${ALLOWED_STATUSES.join(", ")}` });
+  }
   try {
     // Ensure slot is not already occupied
     const { rows: existing } = await pool.query(
@@ -75,17 +92,16 @@ router.post("/", async (req, res) => {
     if (existing.length > 0) {
       return res.status(409).json({ error: "Slot is already occupied" });
     }
+    const cols = ["bull_id", "slot_id", "quantity", "sio_batch_code", "production_date"];
+    const vals = [bull_id, slot_id, quantity, sio_batch_code, production_date];
+    if (status !== undefined) {
+      cols.push("status");
+      vals.push(status);
+    }
+    const placeholders = vals.map((_, i) => `$${i + 1}`).join(", ");
     const { rows } = await pool.query(
-      `INSERT INTO batches (bull_id, slot_id, quantity, sio_batch_code, production_date, status)
-       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-      [
-        bull_id,
-        slot_id,
-        quantity,
-        sio_batch_code,
-        production_date,
-        status || "approved",
-      ],
+      `INSERT INTO batches (${cols.join(", ")}) VALUES (${placeholders}) RETURNING *`,
+      vals,
     );
 
     await pool.query(
@@ -104,6 +120,11 @@ router.post("/", async (req, res) => {
 // PUT /api/batches/:id
 router.put("/:id", async (req, res) => {
   const { quantity, sio_batch_code, production_date, status } = req.body;
+  if (status !== undefined && !ALLOWED_STATUSES.includes(status)) {
+    return res
+      .status(400)
+      .json({ error: `Invalid status. Must be one of: ${ALLOWED_STATUSES.join(", ")}` });
+  }
   try {
     const { rows } = await pool.query(
       `UPDATE batches SET
