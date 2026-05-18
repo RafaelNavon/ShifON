@@ -207,6 +207,11 @@
   border-color: rgba(239, 68, 68, 0.35);
 }
 
+.status-neutral {
+  background: rgba(148, 163, 184, 0.10);
+  border-color: rgba(148, 163, 184, 0.30);
+}
+
 .cell-bull {
   font-size: 10px;
   font-weight: 600;
@@ -323,6 +328,10 @@
 
 .panel-status-badge.status-rejected {
   color: #dc2626;
+}
+
+.panel-status-badge.status-neutral {
+  color: #64748b;
 }
 
 .panel-fields {
