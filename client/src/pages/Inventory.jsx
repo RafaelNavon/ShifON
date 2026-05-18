@@ -2,19 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import { apiFetch } from "../utils/api";
 import AddBatchModal from "../components/AddBatchModal";
 import EditBatchModal from "../components/EditBatchModal";
+import { BATCH_STATUS_LABEL, BATCH_STATUS_COLOR, RED_STATUSES } from "../utils/batchStatus";
 import "./Inventory.css";
-
-const STATUS_COLOR = {
-  approved: "status-approved",
-  skew: "status-skew",
-  rejected: "status-rejected",
-};
-
-const   STATUS_LABEL = {
-  approved: "Approved",
-  skew: "Skew",
-  rejected: "Rejected",
-};
 
 export default function Inventory() {
   const [containers, setContainers] = useState([]);
@@ -71,8 +60,8 @@ export default function Inventory() {
     0,
   );
   const slotsUsed = allSlots.filter((s) => s.batch).length;
-  const rejectedCount = allSlots.filter(
-    (s) => s.batch?.status === "rejected",
+  const issuesCount = allSlots.filter(
+    (s) => RED_STATUSES.includes(s.batch?.status),
   ).length;
 
   return (
@@ -98,10 +87,10 @@ export default function Inventory() {
         </div>
         <div className="stat-card">
           <span
-            className={`stat-value ${rejectedCount > 0 ? "stat-rejected" : ""}`}>
-            {rejectedCount}
+            className={`stat-value ${issuesCount > 0 ? "stat-rejected" : ""}`}>
+            {issuesCount}
           </span>
-          <span className="stat-label">Rejected</span>
+          <span className="stat-label">Issues</span>
         </div>
       </div>
 
@@ -222,7 +211,7 @@ function SlotCell({ slot, selected, onClick }) {
     return <div className="slot-cell slot-cell--missing" />;
   }
   const { batch } = slot;
-  const statusClass = batch ? STATUS_COLOR[batch.status] || "" : "";
+  const statusClass = batch ? BATCH_STATUS_COLOR[batch.status] || "" : "";
 
   return (
     <button
@@ -230,7 +219,7 @@ function SlotCell({ slot, selected, onClick }) {
       onClick={onClick}
       title={
         batch
-          ? `${batch.bull_name} — ${batch.quantity} straws (${batch.status})`
+          ? `${batch.bull_name} — ${batch.quantity} straws (${BATCH_STATUS_LABEL[batch.status] || batch.status})`
           : "Empty"
       }>
       {batch ? (
@@ -302,8 +291,8 @@ function SlotPanel({ slot, onClose, onAddBatch, onEdit, onDeleted }) {
 
         {batch ? (
           <div className="panel-body">
-            <div className={`panel-status-badge ${STATUS_COLOR[batch.status]}`}>
-              {STATUS_LABEL[batch.status] || batch.status}
+            <div className={`panel-status-badge ${BATCH_STATUS_COLOR[batch.status]}`}>
+              {BATCH_STATUS_LABEL[batch.status] || batch.status}
             </div>
 
             <dl className="panel-fields">

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { apiFetch } from '../utils/api'
+import { BATCH_STATUSES, BATCH_STATUS_LABEL, DEFAULT_BATCH_STATUS } from '../utils/batchStatus'
 import './AddBatchModal.css' // reuse same form styles
 
 export default function EditBatchModal({ batch, onClose, onSuccess }) {
@@ -7,7 +8,7 @@ export default function EditBatchModal({ batch, onClose, onSuccess }) {
     quantity: batch.quantity ?? '',
     sio_batch_code: batch.sio_batch_code ?? '',
     production_date: batch.production_date ? batch.production_date.slice(0, 10) : '',
-    status: batch.status ?? 'approved',
+    status: batch.status ?? DEFAULT_BATCH_STATUS,
   })
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -91,9 +92,9 @@ export default function EditBatchModal({ batch, onClose, onSuccess }) {
               onChange={(e) => set('status', e.target.value)}
               required
             >
-              <option value="approved">Approved</option>
-              <option value="skew">Skew</option>
-              <option value="rejected">Rejected</option>
+              {BATCH_STATUSES.map((code) => (
+                <option key={code} value={code}>{BATCH_STATUS_LABEL[code]}</option>
+              ))}
             </select>
           </div>
 
