@@ -5,6 +5,26 @@ import EditBatchModal from "../components/EditBatchModal";
 import { BATCH_STATUS_LABEL, BATCH_STATUS_COLOR, RED_STATUSES } from "../utils/batchStatus";
 import "./Inventory.css";
 
+// Defines vertical row order for any position; lower number = higher on screen
+const POSITION_ORDER = {
+  UP: 0,
+  UP_1: 0,
+  UP_2: 1,
+  DOWN: 2,
+  DOWN_1: 2,
+  DOWN_2: 3,
+};
+
+// Left-side row label for each position
+const POSITION_ROW_LABEL = {
+  UP: "↑",
+  DOWN: "↓",
+  UP_1: "↑₁",
+  UP_2: "↑₂",
+  DOWN_1: "↓₁",
+  DOWN_2: "↓₂",
+};
+
 export default function Inventory() {
   const [containers, setContainers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -159,6 +179,13 @@ function ContainerCard({ container, selectedSlotId, onSelect }) {
   );
   const cols = Array.from({ length: maxSlot }, (_, i) => i + 1);
 
+  const positions = [...new Set((container.slots || []).map((s) => s.position))].sort(
+    (a, b) => {
+      const orderDiff = (POSITION_ORDER[a] ?? 99) - (POSITION_ORDER[b] ?? 99);
+      return orderDiff !== 0 ? orderDiff : a.localeCompare(b);
+    },
+  );
+
   return (
     <div
       className="container-card"
@@ -166,41 +193,34 @@ function ContainerCard({ container, selectedSlotId, onSelect }) {
       <div className="container-title">{container.name}</div>
       <div
         className="slot-grid"
-        style={{ gridTemplateColumns: `20px repeat(${maxSlot}, 1fr)` }}>
+        style={{
+          gridTemplateColumns: `20px repeat(${maxSlot}, 1fr)`,
+          gridTemplateRows: `18px repeat(${positions.length}, 60px)`,
+        }}>
         <div className="slot-row-label" />
         {cols.map((n) => (
           <div key={n} className="slot-col-header">
             {n}
           </div>
         ))}
-        <div className="slot-row-label">↑</div>
-        {cols.map((n) => {
-          const slot = index[`${n}-UP`];
-          return (
-            <SlotCell
-              key={`${n}-UP`}
-              slot={slot}
-              selected={slot?.id === selectedSlotId}
-              onClick={() =>
-                slot && onSelect({ ...slot, container_name: container.name })
-              }
-            />
-          );
-        })}
-        <div className="slot-row-label">↓</div>
-        {cols.map((n) => {
-          const slot = index[`${n}-DOWN`];
-          return (
-            <SlotCell
-              key={`${n}-DOWN`}
-              slot={slot}
-              selected={slot?.id === selectedSlotId}
-              onClick={() =>
-                slot && onSelect({ ...slot, container_name: container.name })
-              }
-            />
-          );
-        })}
+        {positions.flatMap((position) => [
+          <div key={`label-${position}`} className="slot-row-label">
+            {POSITION_ROW_LABEL[position] || position}
+          </div>,
+          ...cols.map((n) => {
+            const slot = index[`${n}-${position}`];
+            return (
+              <SlotCell
+                key={`${n}-${position}`}
+                slot={slot}
+                selected={slot?.id === selectedSlotId}
+                onClick={() =>
+                  slot && onSelect({ ...slot, container_name: container.name })
+                }
+              />
+            );
+          }),
+        ])}
       </div>
     </div>
   );
