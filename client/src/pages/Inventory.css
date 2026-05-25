@@ -127,8 +127,7 @@
 /* ── Slot grid ─────────────────────────── */
 .slot-grid {
   display: grid;
-  /* grid-template-columns is set via inline style on the element */
-  grid-template-rows: 18px repeat(2, 60px);
+  /* grid-template-columns and grid-template-rows are set via inline style on the element */
   gap: 4px;
 }
 
