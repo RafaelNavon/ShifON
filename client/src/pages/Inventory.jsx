@@ -16,13 +16,23 @@ const POSITION_ORDER = {
 };
 
 // Left-side row label for each position
-const POSITION_ROW_LABEL = {
+export const POSITION_ROW_LABEL = {
   UP: "↑",
   DOWN: "↓",
   UP_1: "↑₁",
   UP_2: "↑₂",
   DOWN_1: "↓₁",
   DOWN_2: "↓₂",
+};
+
+// Full label for a position, used in panels and dropdowns
+export const POSITION_FULL_LABEL = {
+  UP: "Up",
+  DOWN: "Down",
+  UP_1: "Up 1",
+  UP_2: "Up 2",
+  DOWN_1: "Down 1",
+  DOWN_2: "Down 2",
 };
 
 export default function Inventory() {
@@ -298,7 +308,7 @@ function SlotPanel({ slot, onClose, onAddBatch, onEdit, onDeleted }) {
         <div className="panel-header">
           <div>
             <div className="panel-location">
-              Slot {slot.slot_number} {slot.position === "UP" ? "↑" : "↓"}
+              Slot {slot.slot_number} {POSITION_ROW_LABEL[slot.position] || slot.position}
             </div>
             {slot.container_name && (
               <div className="panel-container-name">{slot.container_name}</div>

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { apiFetch } from '../utils/api'
 import { BATCH_STATUSES, BATCH_STATUS_LABEL, DEFAULT_BATCH_STATUS } from '../utils/batchStatus'
+import { POSITION_FULL_LABEL } from '../pages/Inventory'
 import './AddBatchModal.css'
 
 const EMPTY_FORM = {
@@ -113,17 +114,38 @@ export default function AddBatchModal({ containers, onClose, onSuccess, initialS
   }
 
   // For slot number options: compute which slot numbers have at least one free position
-  const slotOptions = [1, 2, 3, 4, 5, 6].map((n) => {
-    const upOccupied = occupiedSet.has(`${n}-UP`)
-    const downOccupied = occupiedSet.has(`${n}-DOWN`)
-    const full = upOccupied && downOccupied
-    return { n, full }
-  })
+  const slotOptions = (() => {
+    if (!containerData) return []
+    // Group this container's positions by slot_number
+    const bySlot = {}
+    for (const s of containerData.slots || []) {
+      if (!bySlot[s.slot_number]) bySlot[s.slot_number] = []
+      bySlot[s.slot_number].push(s.position)
+    }
+    // For each slot number, it's "full" if every position is occupied
+    return Object.keys(bySlot)
+      .map(Number)
+      .sort((a, b) => a - b)
+      .map((n) => {
+        const positionsForSlot = bySlot[n]
+        const full = positionsForSlot.every((pos) =>
+          occupiedSet.has(`${n}-${pos}`),
+        )
+        return { n, full }
+      })
+  })()
 
-  const positionOptions = ['UP', 'DOWN'].map((pos) => ({
-    pos,
-    occupied: occupiedSet.has(`${form.slot_number}-${pos}`),
-  }))
+  const positionOptions = (containerData?.slots || [])
+    .filter((s) => s.slot_number === parseInt(form.slot_number))
+    .map((s) => s.position)
+    .sort((a, b) => {
+      const rank = (p) => (p.startsWith('UP') ? 0 : 1) * 10 + (p.endsWith('_2') ? 2 : p.endsWith('_1') ? 1 : 0)
+      return rank(a) - rank(b)
+    })
+    .map((pos) => ({
+      pos,
+      occupied: occupiedSet.has(`${form.slot_number}-${pos}`),
+    }))
 
   return (
     <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
@@ -198,7 +220,7 @@ export default function AddBatchModal({ containers, onClose, onSuccess, initialS
               <option value="">Select…</option>
               {positionOptions.map(({ pos, occupied }) => (
                 <option key={pos} value={pos} disabled={occupied}>
-                  {pos}{occupied ? ' (occupied)' : ''}
+                  {POSITION_FULL_LABEL[pos] || pos}{occupied ? ' (occupied)' : ''}
                 </option>
               ))}
             </select>
