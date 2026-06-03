@@ -69,6 +69,37 @@ router.post('/', async (req, res) => {
   try {
     await client.query('BEGIN');
 
+    // Sum requested quantities per batch_id (multiple items may reference the same batch)
+    const totals = {};
+    for (const item of items) {
+      if (!item.batch_id || !item.quantity) continue;
+      totals[item.batch_id] = (totals[item.batch_id] || 0) + Number(item.quantity);
+    }
+
+    // Lock all referenced batches and verify each has enough total available
+    const batchIds = Object.keys(totals).map(Number);
+    if (batchIds.length === 0) {
+      throw { status: 400, message: 'No valid items provided' };
+    }
+    const { rows: batchRows } = await client.query(
+      'SELECT id, quantity, status FROM batches WHERE id = ANY($1::int[]) FOR UPDATE',
+      [batchIds],
+    );
+    const batchMap = new Map(batchRows.map((b) => [b.id, b]));
+    for (const id of batchIds) {
+      const batch = batchMap.get(id);
+      if (!batch) throw { status: 404, message: `Batch ${id} not found` };
+      if (batch.status !== 'approved') {
+        throw { status: 400, message: `Batch ${id} is not approved` };
+      }
+      if (totals[id] > batch.quantity) {
+        throw {
+          status: 400,
+          message: `Insufficient quantity in batch ${id} — requested ${totals[id]}, available ${batch.quantity}`,
+        };
+      }
+    }
+
     const { rows: [shipment] } = await client.query(
       'INSERT INTO shipments (destination, shipment_date, notes, created_by) VALUES ($1, $2, $3, $4) RETURNING *',
       [destination, shipment_date, notes, req.user.id],
