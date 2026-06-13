@@ -183,7 +183,7 @@
 
 /* ── Modal: wider variant ──────────────── */
 .modal--wide {
-  max-width: 660px;
+  max-width: 720px;
 }
 
 /* ── Modal: items section ──────────────── */
@@ -214,9 +214,20 @@
 .ship-item-fields {
   flex: 1;
   display: grid;
-  grid-template-columns: 1fr 1fr 120px;
+  grid-template-columns: 1fr 1.5fr 100px;
   gap: 10px;
   min-width: 0;
+}
+
+.ship-item-fields .mfield {
+  min-width: 0;
+}
+
+.ship-item-fields select {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .ship-item-remove {
