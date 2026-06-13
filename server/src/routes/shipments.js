@@ -5,6 +5,8 @@ const { authenticate } = require('../middleware/auth');
 const router = express.Router();
 router.use(authenticate);
 
+const OVERRIDABLE_STATUSES = ['skew', 'skew_ptm', 'ptm', 'awaiting_response'];
+
 const SHIPMENT_BASE = `
   SELECT sh.*,
     u.name AS created_by_name,
@@ -86,11 +88,24 @@ router.post('/', async (req, res) => {
       [batchIds],
     );
     const batchMap = new Map(batchRows.map((b) => [b.id, b]));
+
+    // Build a map of which batches were requested as manager overrides.
+    // Multiple items may reference the same batch; any override=true marks the whole batch.
+    const overrideRequested = {};
+    for (const item of items) {
+      if (item.override === true) overrideRequested[item.batch_id] = true;
+    }
+
     for (const id of batchIds) {
       const batch = batchMap.get(id);
       if (!batch) throw { status: 404, message: `Batch ${id} not found` };
       if (batch.status !== 'approved') {
-        throw { status: 400, message: `Batch ${id} is not approved` };
+        if (!OVERRIDABLE_STATUSES.includes(batch.status)) {
+          throw { status: 400, message: `Batch ${id} has status '${batch.status}' and cannot be shipped` };
+        }
+        if (!overrideRequested[id]) {
+          throw { status: 400, message: `Batch ${id} is not approved (status: ${batch.status}). Manager override required.` };
+        }
       }
       if (totals[id] > batch.quantity) {
         throw {
@@ -112,15 +127,35 @@ router.post('/', async (req, res) => {
       );
       if (!batch) throw { status: 404, message: `Batch ${item.batch_id} not found` };
       if (batch.status !== 'approved') {
-        throw { status: 400, message: `Batch ${item.batch_id} is not approved` };
+        if (!OVERRIDABLE_STATUSES.includes(batch.status)) {
+          throw { status: 400, message: `Batch ${item.batch_id} has status '${batch.status}' and cannot be shipped` };
+        }
+        if (item.override !== true) {
+          throw { status: 400, message: `Batch ${item.batch_id} is not approved (status: ${batch.status}). Manager override required.` };
+        }
       }
       if (batch.quantity < item.quantity) {
         throw { status: 400, message: `Insufficient quantity in batch ${item.batch_id}` };
       }
 
+      const batchForItem = batchMap.get(item.batch_id);
+      const isOverride =
+        item.override === true &&
+        batchForItem &&
+        batchForItem.status !== 'approved' &&
+        OVERRIDABLE_STATUSES.includes(batchForItem.status);
       await client.query(
-        'INSERT INTO shipment_items (shipment_id, batch_id, quantity) VALUES ($1, $2, $3)',
-        [shipment.id, item.batch_id, item.quantity],
+        `INSERT INTO shipment_items
+          (shipment_id, batch_id, quantity, override_by, override_at, original_status)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [
+          shipment.id,
+          item.batch_id,
+          item.quantity,
+          isOverride ? req.user.id : null,
+          isOverride ? new Date() : null,
+          isOverride ? batchForItem.status : null,
+        ],
       );
 
       const newQty = batch.quantity - item.quantity;
