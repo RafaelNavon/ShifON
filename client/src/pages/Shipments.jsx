@@ -5,6 +5,16 @@ import "./Shipments.css";
 const DEST_LABEL = { north: "North", south: "South" };
 const DEST_CLASS = { north: "badge-north", south: "badge-south" };
 
+const OVERRIDABLE_STATUSES = ["skew", "skew_ptm", "ptm", "awaiting_response"];
+
+const STATUS_DISPLAY = {
+  approved: "Approved",
+  skew: "Skew",
+  skew_ptm: "Skew PTM",
+  ptm: "PTM",
+  awaiting_response: "Awaiting Response",
+};
+
 function formatDate(d) {
   if (!d) return "—";
   return new Date(d).toLocaleDateString("en-GB", {
@@ -263,7 +273,7 @@ function LogShipmentModal({ onClose, onSuccess }) {
   const [date, setDate] = useState("");
   const [notes, setNotes] = useState("");
   const [items, setItems] = useState([
-    { bull_id: "", batch_id: "", quantity: "" },
+    { bull_id: "", batch_id: "", quantity: "", override: false },
   ]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -302,27 +312,42 @@ function LogShipmentModal({ onClose, onSuccess }) {
       if (field === "bull_id") {
         next[index].batch_id = "";
         next[index].quantity = "";
+        next[index].override = false;
       }
       if (field === "batch_id") {
         next[index].quantity = "";
+        next[index].override = false;
       }
       return next;
     });
   }
 
   function addItem() {
-    setItems((prev) => [...prev, { bull_id: "", batch_id: "", quantity: "" }]);
+    setItems((prev) => [
+      ...prev,
+      { bull_id: "", batch_id: "", quantity: "", override: false },
+    ]);
   }
 
   function removeItem(index) {
     setItems((prev) => prev.filter((_, i) => i !== index));
   }
 
-  function approvedBatchesForBull(bull_id) {
+  function shippableBatchesForBull(bull_id) {
     if (!bull_id) return [];
     return allBatches.filter(
-      (b) => b.bull_id === parseInt(bull_id) && b.status === "approved",
+      (b) =>
+        b.bull_id === parseInt(bull_id) &&
+        (b.status === "approved" || OVERRIDABLE_STATUSES.includes(b.status)),
     );
+  }
+
+  function itemNeedsOverride(item) {
+    if (!item.batch_id) return false;
+    const b = allBatches.find((b) => b.id === parseInt(item.batch_id));
+    return b
+      ? b.status !== "approved" && OVERRIDABLE_STATUSES.includes(b.status)
+      : false;
   }
 
   function maxQtyForBatch(batch_id, currentIndex) {
@@ -371,6 +396,14 @@ function LogShipmentModal({ onClose, onSuccess }) {
         return;
       }
     }
+    for (const [i, item] of items.entries()) {
+      if (itemNeedsOverride(item) && !item.override) {
+        setError(
+          `Item ${i + 1}: this batch requires manager authorization. Check the override box.`,
+        );
+        return;
+      }
+    }
 
     setError("");
     setSubmitting(true);
@@ -384,6 +417,7 @@ function LogShipmentModal({ onClose, onSuccess }) {
           items: items.map((item) => ({
             batch_id: parseInt(item.batch_id),
             quantity: parseInt(item.quantity),
+            ...(item.override ? { override: true } : {}),
           })),
         }),
       });
@@ -456,8 +490,9 @@ function LogShipmentModal({ onClose, onSuccess }) {
             <label className="items-section-label">Items</label>
             <div className="ship-items-list">
               {items.map((item, i) => {
-                const batches = approvedBatchesForBull(item.bull_id);
+                const batches = shippableBatchesForBull(item.bull_id);
                 const max = maxQtyForBatch(item.batch_id, i)
+                const needsOverride = itemNeedsOverride(item)
                 return (
                   <div key={i} className="ship-item-row">
                     <div className="ship-item-fields">
@@ -493,6 +528,9 @@ function LogShipmentModal({ onClose, onSuccess }) {
                               {b.container_name} · Slot {b.slot_number}{" "}
                               {b.position === "UP" ? "↑" : "↓"} — {b.quantity}{" "}
                               avail
+                              {b.status !== "approved"
+                                ? ` [${STATUS_DISPLAY[b.status] || b.status}]`
+                                : ""}
                             </option>
                           ))}
                         </select>
@@ -519,6 +557,28 @@ function LogShipmentModal({ onClose, onSuccess }) {
                         />
                       </div>
                     </div>
+
+                    {needsOverride && (
+                      <div className="ship-override-row">
+                        <span className="ship-override-badge">
+                          {STATUS_DISPLAY[
+                            allBatches.find(
+                              (b) => b.id === parseInt(item.batch_id),
+                            )?.status
+                          ] || "Non-approved"}
+                        </span>
+                        <label className="ship-override-label">
+                          <input
+                            type="checkbox"
+                            checked={item.override}
+                            onChange={(e) =>
+                              setItem(i, "override", e.target.checked)
+                            }
+                          />
+                          Manager authorized
+                        </label>
+                      </div>
+                    )}
 
                     {items.length > 1 && (
                       <button
@@ -549,7 +609,15 @@ function LogShipmentModal({ onClose, onSuccess }) {
               disabled={submitting}>
               Cancel
             </button>
-            <button type="submit" className="btn-primary" disabled={submitting}>
+            <button
+              type="submit"
+              className="btn-primary"
+              disabled={
+                submitting ||
+                items.some(
+                  (item) => itemNeedsOverride(item) && !item.override,
+                )
+              }>
               {submitting ? "Saving…" : "Log Shipment"}
             </button>
           </div>
