@@ -20,7 +20,11 @@ const SHIPMENT_BASE = `
         'sio_batch_code', ba.sio_batch_code,
         'container_name', c.name,
         'slot_number', s.slot_number,
-        'position', s.position
+        'position', s.position,
+        'override_by', si.override_by,
+        'override_at', si.override_at,
+        'original_status', si.original_status,
+        'override_by_name', ou.name
       )
     ) FILTER (WHERE si.id IS NOT NULL) AS items
   FROM shipments sh
@@ -30,6 +34,7 @@ const SHIPMENT_BASE = `
   LEFT JOIN bulls bu ON bu.id = ba.bull_id
   LEFT JOIN slots s ON s.id = ba.slot_id
   LEFT JOIN containers c ON c.id = s.container_id
+  LEFT JOIN users ou ON ou.id = si.override_by
 `;
 
 // GET /api/shipments

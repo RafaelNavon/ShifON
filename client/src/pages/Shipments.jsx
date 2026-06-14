@@ -177,6 +177,7 @@ export default function Shipments() {
                                       <th>Bull</th>
                                       <th>Slot</th>
                                       <th>Qty Shipped</th>
+                                      <th></th>
                                     </tr>
                                   </thead>
                                   <tbody>
@@ -193,6 +194,15 @@ export default function Shipments() {
                                             : "—"}
                                         </td>
                                         <td>{item.quantity}</td>
+                                        <td>
+                                          {item.override_by && (
+                                            <span
+                                              className="ship-override-badge"
+                                              title={`Override by ${item.override_by_name || "unknown"} — original status: ${item.original_status || "?"}`}>
+                                              Override
+                                            </span>
+                                          )}
+                                        </td>
                                       </tr>
                                     ))}
                                   </tbody>
