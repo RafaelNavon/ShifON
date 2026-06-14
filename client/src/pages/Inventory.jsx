@@ -89,7 +89,7 @@ export default function Inventory() {
     (sum, s) => sum + (s.batch?.quantity || 0),
     0,
   );
-  const slotsUsed = allSlots.filter((s) => s.batch).length;
+  const slotsUsed = allSlots.filter((s) => s.batch && s.batch.quantity > 0).length;
   const issuesCount = allSlots.filter(
     (s) => RED_STATUSES.includes(s.batch?.status),
   ).length;
@@ -240,7 +240,7 @@ function SlotCell({ slot, selected, onClick }) {
   if (!slot) {
     return <div className="slot-cell slot-cell--missing" />;
   }
-  const { batch } = slot;
+  const batch = slot.batch?.quantity > 0 ? slot.batch : null;
   const statusClass = batch ? BATCH_STATUS_COLOR[batch.status] || "" : "";
 
   return (
@@ -265,7 +265,7 @@ function SlotCell({ slot, selected, onClick }) {
 }
 
 function SlotPanel({ slot, onClose, onAddBatch, onEdit, onDeleted }) {
-  const { batch } = slot;
+  const batch = slot.batch?.quantity > 0 ? slot.batch : null;
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
