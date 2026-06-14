@@ -164,14 +164,10 @@ router.post('/', async (req, res) => {
       );
 
       const newQty = batch.quantity - item.quantity;
-      if (newQty === 0) {
-        await client.query('DELETE FROM batches WHERE id = $1', [item.batch_id]);
-      } else {
-        await client.query(
-          'UPDATE batches SET quantity = $1 WHERE id = $2',
-          [newQty, item.batch_id],
-        );
-      }
+      await client.query(
+        'UPDATE batches SET quantity = $1 WHERE id = $2',
+        [newQty, item.batch_id],
+      );
     }
 
     await client.query('COMMIT');
