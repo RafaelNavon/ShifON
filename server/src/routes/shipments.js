@@ -182,18 +182,50 @@ router.post('/', async (req, res) => {
   }
 });
 
-// DELETE /api/shipments/:id
+// DELETE /api/shipments/:id — restores batch quantities, then deletes
 router.delete('/:id', async (req, res) => {
+  const client = await pool.connect();
   try {
-    const { rowCount } = await pool.query(
-      'DELETE FROM shipments WHERE id = $1',
+    await client.query('BEGIN');
+
+    // Verify shipment exists
+    const { rows: [shipment] } = await client.query(
+      'SELECT id FROM shipments WHERE id = $1 FOR UPDATE',
       [req.params.id],
     );
-    if (!rowCount) return res.status(404).json({ error: 'Shipment not found' });
+    if (!shipment) {
+      await client.query('ROLLBACK');
+      client.release();
+      return res.status(404).json({ error: 'Shipment not found' });
+    }
+
+    // Get all items for this shipment
+    const { rows: items } = await client.query(
+      'SELECT batch_id, quantity FROM shipment_items WHERE shipment_id = $1',
+      [shipment.id],
+    );
+
+    // Restore quantities to each batch
+    for (const item of items) {
+      if (item.batch_id) {
+        await client.query(
+          'UPDATE batches SET quantity = quantity + $1 WHERE id = $2',
+          [item.quantity, item.batch_id],
+        );
+      }
+    }
+
+    // Delete the shipment (cascade deletes shipment_items)
+    await client.query('DELETE FROM shipments WHERE id = $1', [shipment.id]);
+
+    await client.query('COMMIT');
     res.status(204).end();
   } catch (err) {
+    await client.query('ROLLBACK');
     console.error('Error in DELETE shipment:', err);
     res.status(500).json({ error: 'Server error' });
+  } finally {
+    client.release();
   }
 });
 
