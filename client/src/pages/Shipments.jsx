@@ -39,6 +39,7 @@ export default function Shipments() {
   const [error, setError] = useState("");
   const [expandedId, setExpandedId] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [editingShipment, setEditingShipment] = useState(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
@@ -210,6 +211,12 @@ export default function Shipments() {
                               )}
                               {user.role === "admin" && (
                                 <div className="ship-detail-actions">
+                                  <button
+                                    className="btn-ghost"
+                                    onClick={() => setEditingShipment(s)}
+                                  >
+                                    Edit shipment
+                                  </button>
                                   {deleteConfirmId === s.id ? (
                                     <div className="delete-confirm">
                                       <span className="delete-confirm-text">
@@ -263,11 +270,13 @@ export default function Shipments() {
         </div>
       )}
 
-      {modalOpen && (
+      {(modalOpen || editingShipment) && (
         <LogShipmentModal
-          onClose={() => setModalOpen(false)}
+          editShipment={editingShipment}
+          onClose={() => { setModalOpen(false); setEditingShipment(null); }}
           onSuccess={() => {
             setModalOpen(false);
+            setEditingShipment(null);
             fetchShipments();
           }}
         />
@@ -276,15 +285,25 @@ export default function Shipments() {
   );
 }
 
-function LogShipmentModal({ onClose, onSuccess }) {
+function LogShipmentModal({ onClose, onSuccess, editShipment }) {
   const [bulls, setBulls] = useState([]);
   const [allBatches, setAllBatches] = useState([]);
-  const [destination, setDestination] = useState("");
-  const [date, setDate] = useState("");
-  const [notes, setNotes] = useState("");
-  const [items, setItems] = useState([
-    { bull_id: "", batch_id: "", quantity: "", override: false },
-  ]);
+  const [destination, setDestination] = useState(editShipment?.destination || "");
+  const [date, setDate] = useState(editShipment?.shipment_date ? editShipment.shipment_date.slice(0, 10) : "");
+  const [notes, setNotes] = useState(editShipment?.notes || "");
+  const [items, setItems] = useState(() => {
+    if (editShipment?.items?.length) {
+      return editShipment.items
+        .filter((item) => item.batch_id)
+        .map((item) => ({
+          bull_id: "",
+          batch_id: String(item.batch_id),
+          quantity: String(item.quantity),
+          override: false,
+        }));
+    }
+    return [{ bull_id: "", batch_id: "", quantity: "", override: false }];
+  });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -302,6 +321,18 @@ function LogShipmentModal({ onClose, onSuccess }) {
       })
       .catch((err) => console.error("Error fetching batches:", err));
   }, []);
+
+  useEffect(() => {
+    if (!editShipment || allBatches.length === 0) return;
+    setItems((prev) =>
+      prev.map((item) => {
+        if (item.bull_id || !item.batch_id) return item;
+        const batch = allBatches.find((b) => b.id === parseInt(item.batch_id));
+        if (!batch) return item;
+        return { ...item, bull_id: String(batch.bull_id) };
+      }),
+    );
+  }, [editShipment, allBatches]);
 
   const handleKey = useCallback(
     (e) => {
@@ -364,13 +395,23 @@ function LogShipmentModal({ onClose, onSuccess }) {
     if (!batch_id) return null
     const b = allBatches.find((b) => b.id === parseInt(batch_id))
     if (!b) return null
+    // In edit mode, the backend will restore old quantities before applying new ones.
+    // So the real available = current quantity + what the old shipment took from this batch.
+    let restoredQty = 0
+    if (editShipment?.items) {
+      for (const oldItem of editShipment.items) {
+        if (oldItem.batch_id === parseInt(batch_id)) {
+          restoredQty += oldItem.quantity
+        }
+      }
+    }
     const claimedByOthers = items.reduce((sum, item, idx) => {
       if (idx === currentIndex) return sum
       if (parseInt(item.batch_id) !== parseInt(batch_id)) return sum
       const q = parseInt(item.quantity)
       return sum + (isNaN(q) ? 0 : q)
     }, 0)
-    return Math.max(0, b.quantity - claimedByOthers)
+    return Math.max(0, b.quantity + restoredQty - claimedByOthers)
   }
 
   async function handleSubmit(e) {
@@ -418,8 +459,12 @@ function LogShipmentModal({ onClose, onSuccess }) {
     setError("");
     setSubmitting(true);
     try {
-      const res = await apiFetch("/api/shipments", {
-        method: "POST",
+      const url = editShipment
+        ? `/api/shipments/${editShipment.id}`
+        : "/api/shipments"
+      const method = editShipment ? "PUT" : "POST"
+      const res = await apiFetch(url, {
+        method,
         body: JSON.stringify({
           destination,
           shipment_date: date,
@@ -454,7 +499,7 @@ function LogShipmentModal({ onClose, onSuccess }) {
         aria-modal="true"
         aria-labelledby="ship-modal-title">
         <div className="modal-header">
-          <h2 id="ship-modal-title">Log Shipment</h2>
+          <h2 id="ship-modal-title">{editShipment ? "Edit Shipment" : "Log Shipment"}</h2>
           <button className="modal-close" onClick={onClose} aria-label="Close">
             ✕
           </button>
@@ -628,7 +673,7 @@ function LogShipmentModal({ onClose, onSuccess }) {
                   (item) => itemNeedsOverride(item) && !item.override,
                 )
               }>
-              {submitting ? "Saving…" : "Log Shipment"}
+              {submitting ? "Saving…" : editShipment ? "Save Changes" : "Log Shipment"}
             </button>
           </div>
         </form>
