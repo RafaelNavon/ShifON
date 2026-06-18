@@ -306,6 +306,8 @@ function LogShipmentModal({ onClose, onSuccess, editShipment }) {
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [targets, setTargets] = useState([])
+  const [targetWarning, setTargetWarning] = useState(null)
 
   useEffect(() => {
     apiFetch("/api/bulls")
@@ -374,6 +376,50 @@ function LogShipmentModal({ onClose, onSuccess, editShipment }) {
     setItems((prev) => prev.filter((_, i) => i !== index));
   }
 
+  function addTarget() {
+    setTargets((prev) => [...prev, { bull_id: "", quantity: "" }])
+  }
+
+  function setTarget(index, field, value) {
+    setTargets((prev) => {
+      const next = [...prev]
+      next[index] = { ...next[index], [field]: value }
+      return next
+    })
+  }
+
+  function removeTarget(index) {
+    setTargets((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  function getTargetProgress(bull_id) {
+    if (!bull_id) return 0
+    return items.reduce((sum, item) => {
+      if (item.bull_id === bull_id) {
+        const q = parseInt(item.quantity)
+        return sum + (isNaN(q) ? 0 : q)
+      }
+      return sum
+    }, 0)
+  }
+
+  function getUnmetTargets() {
+    return targets
+      .filter((t) => t.bull_id && t.quantity && parseInt(t.quantity) > 0)
+      .filter((t) => getTargetProgress(t.bull_id) < parseInt(t.quantity))
+      .map((t) => {
+        const progress = getTargetProgress(t.bull_id)
+        const target = parseInt(t.quantity)
+        const bull = bulls.find((b) => b.id === parseInt(t.bull_id))
+        return {
+          bull_name: bull ? `${bull.name} — ${bull.bull_code}` : "Unknown",
+          progress,
+          target,
+          remaining: target - progress,
+        }
+      })
+  }
+
   function shippableBatchesForBull(bull_id) {
     if (!bull_id) return [];
     return allBatches.filter(
@@ -414,50 +460,9 @@ function LogShipmentModal({ onClose, onSuccess, editShipment }) {
     return Math.max(0, b.quantity + restoredQty - claimedByOthers)
   }
 
-  async function handleSubmit(e) {
-    e.preventDefault();
-    if (!destination) {
-      setError("Destination is required");
-      return;
-    }
-    if (!date) {
-      setError("Date is required");
-      return;
-    }
-    if (items.length === 0) {
-      setError("At least one item is required");
-      return;
-    }
-    for (const [i, item] of items.entries()) {
-      if (!item.bull_id) {
-        setError(`Item ${i + 1}: select a bull`);
-        return;
-      }
-      if (!item.batch_id) {
-        setError(`Item ${i + 1}: select a batch`);
-        return;
-      }
-      if (!item.quantity || parseInt(item.quantity) < 1) {
-        setError(`Item ${i + 1}: enter a valid quantity`);
-        return;
-      }
-      const max = maxQtyForBatch(item.batch_id, i)
-      if (max !== null && parseInt(item.quantity) > max) {
-        setError(`Item ${i + 1}: quantity exceeds available (${max})`);
-        return;
-      }
-    }
-    for (const [i, item] of items.entries()) {
-      if (itemNeedsOverride(item) && !item.override) {
-        setError(
-          `Item ${i + 1}: this batch requires manager authorization. Check the override box.`,
-        );
-        return;
-      }
-    }
-
-    setError("");
-    setSubmitting(true);
+  async function submitShipment() {
+    setError("")
+    setSubmitting(true)
     try {
       const url = editShipment
         ? `/api/shipments/${editShipment.id}`
@@ -475,20 +480,53 @@ function LogShipmentModal({ onClose, onSuccess, editShipment }) {
             ...(item.override ? { override: true } : {}),
           })),
         }),
-      });
-      if (!res) return;
-      const data = await res.json();
+      })
+      if (!res) return
+      const data = await res.json()
       if (!res.ok) {
-        setError(data.error || "Failed to log shipment");
-        return;
+        setError(data.error || "Failed to log shipment")
+        return
       }
-      onSuccess();
+      onSuccess()
     } catch (err) {
-      console.error("Error creating shipment:", err);
-      setError("Network error — could not connect to server");
+      console.error("Error creating shipment:", err)
+      setError("Network error — could not connect to server")
     } finally {
-      setSubmitting(false);
+      setSubmitting(false)
     }
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    setTargetWarning(null)
+    if (!destination) { setError("Destination is required"); return }
+    if (!date) { setError("Date is required"); return }
+    if (items.length === 0) { setError("At least one item is required"); return }
+    for (const [i, item] of items.entries()) {
+      if (!item.bull_id) { setError(`Item ${i + 1}: select a bull`); return }
+      if (!item.batch_id) { setError(`Item ${i + 1}: select a batch`); return }
+      if (!item.quantity || parseInt(item.quantity) < 1) {
+        setError(`Item ${i + 1}: enter a valid quantity`); return
+      }
+      const max = maxQtyForBatch(item.batch_id, i)
+      if (max !== null && parseInt(item.quantity) > max) {
+        setError(`Item ${i + 1}: quantity exceeds available (${max})`); return
+      }
+    }
+    for (const [i, item] of items.entries()) {
+      if (itemNeedsOverride(item) && !item.override) {
+        setError(`Item ${i + 1}: this batch requires manager authorization. Check the override box.`)
+        return
+      }
+    }
+
+    const unmet = getUnmetTargets()
+    if (unmet.length > 0) {
+      setTargetWarning(unmet)
+      return
+    }
+
+    await submitShipment()
   }
 
   return (
@@ -539,6 +577,80 @@ function LogShipmentModal({ onClose, onSuccess, editShipment }) {
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Optional notes…"
             />
+          </div>
+
+          <div className="mfield mfield--full">
+            <div className="targets-header">
+              <label className="items-section-label">Targets</label>
+              {targets.length === 0 && (
+                <button type="button" className="btn-add-item" onClick={addTarget}>
+                  + Set target
+                </button>
+              )}
+            </div>
+            {targets.length > 0 && (
+              <div className="ship-targets-list">
+                {targets.map((t, i) => {
+                  const progress = getTargetProgress(t.bull_id)
+                  const target = parseInt(t.quantity) || 0
+                  const pct = target > 0 ? Math.min(100, Math.round((progress / target) * 100)) : 0
+                  const met = target > 0 && progress >= target
+                  return (
+                    <div key={i} className="ship-target-row">
+                      <div className="ship-target-fields">
+                        <div className="mfield">
+                          <select
+                            value={t.bull_id}
+                            onChange={(e) => setTarget(i, "bull_id", e.target.value)}
+                          >
+                            <option value="">Select bull…</option>
+                            {bulls.map((b) => (
+                              <option key={b.id} value={b.id}>
+                                {b.name} — {b.bull_code}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="mfield">
+                          <input
+                            type="number"
+                            min="1"
+                            value={t.quantity}
+                            onChange={(e) => setTarget(i, "quantity", e.target.value)}
+                            placeholder="Target qty"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          className="ship-item-remove"
+                          onClick={() => removeTarget(i)}
+                          aria-label="Remove target"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                      {t.bull_id && target > 0 && (
+                        <div className="ship-target-progress">
+                          <div className="ship-target-bar">
+                            <div
+                              className={`ship-target-fill ${met ? "ship-target-fill--met" : ""}`}
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                          <span className={`ship-target-text ${met ? "ship-target-text--met" : ""}`}>
+                            {progress} / {target}
+                            {met ? " ✓" : ` (${target - progress} remaining)`}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+                <button type="button" className="btn-add-item" onClick={addTarget}>
+                  + Add target
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="mfield mfield--full">
@@ -655,6 +767,30 @@ function LogShipmentModal({ onClose, onSuccess, editShipment }) {
           </div>
 
           {error && <p className="modal-error">{error}</p>}
+
+          {targetWarning && (
+            <div className="ship-target-warning">
+              <p className="ship-target-warning-title">Some targets not met:</p>
+              {targetWarning.map((t, i) => (
+                <p key={i} className="ship-target-warning-item">
+                  {t.bull_name}: {t.progress} / {t.target} ({t.remaining} short)
+                </p>
+              ))}
+              <div className="ship-target-warning-actions">
+                <button type="button" className="btn-ghost" onClick={() => setTargetWarning(null)}>
+                  Go back
+                </button>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  disabled={submitting}
+                  onClick={async () => { setTargetWarning(null); await submitShipment() }}
+                >
+                  {submitting ? "Saving…" : "Submit anyway"}
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="modal-actions">
             <button
