@@ -182,6 +182,151 @@ router.post('/', async (req, res) => {
   }
 });
 
+// PUT /api/shipments/:id — edit shipment (admin only)
+router.put('/:id', async (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Only admins can edit shipments' });
+  }
+
+  const { destination, shipment_date, notes, items } = req.body;
+  if (!destination || !shipment_date || !items?.length) {
+    return res.status(400).json({ error: 'destination, shipment_date, and items are required' });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // Lock the shipment
+    const { rows: [shipment] } = await client.query(
+      'SELECT id FROM shipments WHERE id = $1 FOR UPDATE',
+      [req.params.id],
+    );
+    if (!shipment) {
+      throw { status: 404, message: 'Shipment not found' };
+    }
+
+    // === PHASE 1: Reverse old items ===
+    const { rows: oldItems } = await client.query(
+      'SELECT batch_id, quantity FROM shipment_items WHERE shipment_id = $1',
+      [shipment.id],
+    );
+    for (const item of oldItems) {
+      if (item.batch_id) {
+        await client.query(
+          'UPDATE batches SET quantity = quantity + $1 WHERE id = $2',
+          [item.quantity, item.batch_id],
+        );
+      }
+    }
+    await client.query(
+      'DELETE FROM shipment_items WHERE shipment_id = $1',
+      [shipment.id],
+    );
+
+    // === PHASE 2: Validate and apply new items (same logic as POST) ===
+    const totals = {};
+    for (const item of items) {
+      if (!item.batch_id || !item.quantity) continue;
+      totals[item.batch_id] = (totals[item.batch_id] || 0) + Number(item.quantity);
+    }
+    const batchIds = Object.keys(totals).map(Number);
+    if (batchIds.length === 0) {
+      throw { status: 400, message: 'No valid items provided' };
+    }
+    const { rows: batchRows } = await client.query(
+      'SELECT id, quantity, status FROM batches WHERE id = ANY($1::int[]) FOR UPDATE',
+      [batchIds],
+    );
+    const batchMap = new Map(batchRows.map((b) => [b.id, b]));
+
+    const overrideRequested = {};
+    for (const item of items) {
+      if (item.override === true) overrideRequested[item.batch_id] = true;
+    }
+
+    for (const id of batchIds) {
+      const batch = batchMap.get(id);
+      if (!batch) throw { status: 404, message: `Batch ${id} not found` };
+      if (batch.status !== 'approved') {
+        if (!OVERRIDABLE_STATUSES.includes(batch.status)) {
+          throw { status: 400, message: `Batch ${id} has status '${batch.status}' and cannot be shipped` };
+        }
+        if (!overrideRequested[id]) {
+          throw { status: 400, message: `Batch ${id} is not approved (status: ${batch.status}). Manager override required.` };
+        }
+      }
+      if (totals[id] > batch.quantity) {
+        throw {
+          status: 400,
+          message: `Insufficient quantity in batch ${id} — requested ${totals[id]}, available ${batch.quantity}`,
+        };
+      }
+    }
+
+    for (const item of items) {
+      const { rows: [batch] } = await client.query(
+        'SELECT id, quantity, status FROM batches WHERE id = $1 FOR UPDATE',
+        [item.batch_id],
+      );
+      if (!batch) throw { status: 404, message: `Batch ${item.batch_id} not found` };
+      if (batch.status !== 'approved') {
+        if (!OVERRIDABLE_STATUSES.includes(batch.status)) {
+          throw { status: 400, message: `Batch ${item.batch_id} has status '${batch.status}' and cannot be shipped` };
+        }
+        if (item.override !== true) {
+          throw { status: 400, message: `Batch ${item.batch_id} is not approved (status: ${batch.status}). Manager override required.` };
+        }
+      }
+      if (batch.quantity < item.quantity) {
+        throw { status: 400, message: `Insufficient quantity in batch ${item.batch_id}` };
+      }
+
+      const batchForItem = batchMap.get(item.batch_id);
+      const isOverride =
+        item.override === true &&
+        batchForItem &&
+        batchForItem.status !== 'approved' &&
+        OVERRIDABLE_STATUSES.includes(batchForItem.status);
+      await client.query(
+        `INSERT INTO shipment_items
+          (shipment_id, batch_id, quantity, override_by, override_at, original_status)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [
+          shipment.id,
+          item.batch_id,
+          item.quantity,
+          isOverride ? req.user.id : null,
+          isOverride ? new Date() : null,
+          isOverride ? batchForItem.status : null,
+        ],
+      );
+
+      const newQty = batch.quantity - item.quantity;
+      await client.query(
+        'UPDATE batches SET quantity = $1 WHERE id = $2',
+        [newQty, item.batch_id],
+      );
+    }
+
+    // === PHASE 3: Update shipment metadata ===
+    await client.query(
+      'UPDATE shipments SET destination = $1, shipment_date = $2, notes = $3 WHERE id = $4',
+      [destination, shipment_date, notes, shipment.id],
+    );
+
+    await client.query('COMMIT');
+    res.json({ id: shipment.id, destination, shipment_date, notes });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    if (err.status) return res.status(err.status).json({ error: err.message });
+    console.error('Error in PUT update shipment:', err);
+    res.status(500).json({ error: 'Server error' });
+  } finally {
+    client.release();
+  }
+});
+
 // DELETE /api/shipments/:id — restores batch quantities, then deletes
 router.delete('/:id', async (req, res) => {
   const client = await pool.connect();
