@@ -63,7 +63,7 @@ export default function AddBatchModal({ containers, onClose, onSuccess, initialS
   const occupiedSet = new Set()
   if (containerData) {
     for (const slot of containerData.slots || []) {
-      if (slot.batch) occupiedSet.add(`${slot.slot_number}-${slot.position}`)
+      if (slot.batch && slot.batch.quantity > 0) occupiedSet.add(`${slot.slot_number}-${slot.position}`)
     }
   }
 

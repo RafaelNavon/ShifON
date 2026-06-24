@@ -86,12 +86,18 @@ router.post("/", async (req, res) => {
   try {
     // Ensure slot is not already occupied
     const { rows: existing } = await pool.query(
-      "SELECT id FROM batches WHERE slot_id = $1",
+      "SELECT id FROM batches WHERE slot_id = $1 AND quantity > 0",
       [slot_id],
     );
     if (existing.length > 0) {
       return res.status(409).json({ error: "Slot is already occupied" });
     }
+
+    // Remove any zero-quantity ghost batch left over from a fully-shipped slot
+    await pool.query(
+      "DELETE FROM batches WHERE slot_id = $1 AND quantity = 0",
+      [slot_id],
+    );
     const cols = ["bull_id", "slot_id", "quantity", "sio_batch_code", "production_date"];
     const vals = [bull_id, slot_id, quantity, sio_batch_code, production_date];
     if (status !== undefined) {
