@@ -1,39 +1,102 @@
+@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800&display=swap');
+
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #1a5fa8;
-  --accent-bg: rgba(26, 95, 168, 0.1);
-  --accent-border: rgba(26, 95, 168, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow: rgba(0,0,0,0.1) 0 10px 15px -3px, rgba(0,0,0,0.05) 0 4px 6px -2px;
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
+  /* ── ShifON v3 Design Tokens ─────────────────── */
+
+  /* Font */
+  --font: 'Rubik', system-ui, sans-serif;
+
+  /* Backgrounds */
+  --bg:    #f0f5fc;
+  --bg2:   #e4eef8;
+  --card:  #ffffff;
+  --inbg:  #f5f9ff;
+
+  /* Borders */
+  --border: #cdd8ee;
+
+  /* Text */
+  --text:  #3c4c70;
+  --texth: #07122a;
+  --textm: #7282a8;
+
+  /* Accent */
+  --accent: #0050a0;
+  --accbg:  rgba(0,80,160,0.1);
+  --acct:   #0050a0;
+
+  /* Semantic */
+  --danger:  #dc2626;  --dangbg: rgba(220,38,38,0.09);
+  --success: #009850;  --sucbg:  rgba(0,152,80,0.09);
+  --warn:    #d97706;  --warnbg: rgba(217,119,6,0.09);
+
+  /* Stat */
+  --stat: #0050a0;
+
+  /* Sidebar */
+  --sb-grad: linear-gradient(165deg,#001440 0%,#002d70 100%);
+  --sb-text: #5878b8;
+  --sb-hover: rgba(255,255,255,0.07);
+  --sb-act:  rgba(0,210,130,0.18);
+  --sb-actt: #00e898;
+
+  /* Shadows */
+  --shad:    0 1px 3px rgba(0,50,120,0.07), 0 4px 16px rgba(0,50,120,0.06);
+  --shad-lg: 0 4px 24px rgba(0,50,120,0.12), 0 1px 4px rgba(0,50,120,0.06);
+
+  /* ── Backward-compat aliases (existing components use these) ── */
+  --text-h:       var(--texth);
+  --code-bg:      var(--bg2);
+  --accent-bg:    var(--accbg);
+  --accent-border: rgba(0,80,160,0.5);
+  --social-bg:    rgba(228,238,248,0.5);
+  --shadow:       var(--shad);
+  --sans:         var(--font);
+  --heading:      var(--font);
+  --mono:         ui-monospace, Consolas, monospace;
+
+  font: 15px/150% var(--font);
+  letter-spacing: 0.15px;
   color: var(--text);
   background: var(--bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  @media (max-width: 1024px) { font-size: 16px; }
+  @media (max-width: 1024px) { font-size: 14px; }
 }
 
-[data-theme="dark"] {
-  --text: #9ca3af;
-  --text-h: #f3f4f6;
-  --bg: #16171d;
-  --border: #2e303a;
-  --code-bg: #1f2028;
-  --accent: #3b82f6;
-  --accent-bg: rgba(59, 130, 246, 0.15);
-  --accent-border: rgba(59, 130, 246, 0.5);
-  --social-bg: rgba(47, 48, 58, 0.5);
-  --shadow: rgba(0,0,0,0.4) 0 10px 15px -3px, rgba(0,0,0,0.25) 0 4px 6px -2px;
+[data-theme="dark"], .dark {
+  --bg:    #050e1c;
+  --bg2:   #091630;
+  --card:  #0d1e34;
+  --inbg:  #07101e;
+  --border: #12243e;
+  --text:  #4a6090;
+  --texth: #a8c2e8;
+  --textm: #2e4060;
+  --accent: #3a90e8;
+  --accbg:  rgba(58,144,232,0.14);
+  --acct:   #3a90e8;
+  --danger:  #f87171;  --dangbg: rgba(248,113,113,0.12);
+  --success: #4ade80;  --sucbg:  rgba(74,222,128,0.12);
+  --warn:    #fbbf24;  --warnbg: rgba(251,191,36,0.12);
+  --stat: #3a90e8;
+  --sb-grad: linear-gradient(165deg,#020810 0%,#050f20 100%);
+  --sb-text: #264060;
+  --sb-hover: rgba(255,255,255,0.05);
+  --sb-act:  rgba(0,210,130,0.14);
+  --sb-actt: #00d888;
+  --shad:    0 1px 3px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.25);
+  --shad-lg: 0 4px 32px rgba(0,0,0,0.5), 0 1px 4px rgba(0,0,0,0.3);
+
+  /* Backward-compat aliases */
+  --text-h:       var(--texth);
+  --code-bg:      var(--bg2);
+  --accent-bg:    var(--accbg);
+  --accent-border: rgba(58,144,232,0.5);
+  --social-bg:    rgba(9,22,48,0.5);
+  --shadow:       var(--shad);
 }
 
 body { margin: 0; }
