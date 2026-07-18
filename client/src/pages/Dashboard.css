@@ -35,6 +35,42 @@
   margin: 0;
 }
 
+/* ── Stat cards ────────────────────────── */
+.dash-page .inv-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.dash-page .stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dash-page .stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-h);
+}
+
+.dash-page .stat-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text);
+  opacity: 0.7;
+}
+
+.dash-page .stat-rejected {
+  color: #ef4444;
+}
+
 /* ── Body: two columns ─────────────────── */
 .dash-body {
   display: grid;
@@ -44,7 +80,7 @@
 }
 
 .dash-section {
-  background: var(--code-bg);
+  background: var(--card);
   border: 1px solid var(--border);
   border-radius: 12px;
   display: flex;
@@ -58,6 +94,7 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: var(--text);
+  background: var(--bg2);
   padding: 12px 14px 11px;
   border-bottom: 1px solid var(--border);
   margin: 0;
@@ -202,21 +239,19 @@
 }
 
 /* ── Dark mode adjustments ─────────────── */
-@media (prefers-color-scheme: dark) {
-  .dash-task-status--pending {
-    color: #fbbf24;
-    background: rgba(245, 158, 11, 0.15);
-  }
+[data-theme="dark"] .dash-task-status--pending {
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.15);
+}
 
-  .dash-task-status--in_progress {
-    color: #93c5fd;
-    background: rgba(59, 130, 246, 0.15);
-  }
+[data-theme="dark"] .dash-task-status--in_progress {
+  color: #93c5fd;
+  background: rgba(59, 130, 246, 0.15);
+}
 
-  .dash-task-status--done {
-    color: #4ade80;
-    background: rgba(34, 197, 94, 0.15);
-  }
+[data-theme="dark"] .dash-task-status--done {
+  color: #4ade80;
+  background: rgba(34, 197, 94, 0.15);
 }
 
 /* ── Responsive ────────────────────────── */
@@ -230,6 +265,10 @@
   .dash-page {
     padding: 16px 16px 32px;
     gap: 16px;
+  }
+
+  .dash-page .inv-stats {
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .dash-greeting-text {

@@ -31,7 +31,7 @@
 
 /* ── Column ────────────────────────────── */
 .task-column {
-  background: var(--code-bg);
+  background: var(--bg2);
   border: 1px solid var(--border);
   border-radius: 12px;
   display: flex;
@@ -43,6 +43,14 @@
   background: rgba(59, 130, 246, 0.05);
   outline: 2px dashed rgba(59, 130, 246, 0.4);
   outline-offset: -2px;
+}
+
+.task-column--done {
+  opacity: 0.7;
+}
+
+.task-column--done .task-card-title {
+  text-decoration: line-through;
 }
 
 .task-col-header {
@@ -72,13 +80,13 @@
 .task-col-title {
   font-size: 13px;
   font-weight: 700;
-  color: var(--text-h);
+  color: var(--texth);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .task-col-count {
-  background: var(--bg);
+  background: var(--card);
   border: 1px solid var(--border);
   border-radius: 20px;
   font-size: 11px;
@@ -108,7 +116,7 @@
 /* ── Task card ─────────────────────────── */
 .task-card {
   width: 100%;
-  background: var(--bg);
+  background: var(--card);
   border: 1px solid var(--border);
   border-radius: 9px;
   padding: 12px 13px;
@@ -118,6 +126,7 @@
   text-align: left;
   cursor: grab;
   font-family: var(--sans);
+  box-shadow: var(--shad);
   transition: box-shadow 0.15s, border-color 0.15s;
 }
 
@@ -157,7 +166,7 @@
 .task-card-title {
   font-size: 13px;
   font-weight: 600;
-  color: var(--text-h);
+  color: var(--texth);
   line-height: 1.4;
 }
 
@@ -191,10 +200,8 @@
   font-weight: 500;
 }
 
-@media (prefers-color-scheme: dark) {
-  .task-card-done-by {
-    color: #4ade80;
-  }
+[data-theme="dark"] .task-card-done-by {
+  color: #4ade80;
 }
 
 /* ── Panel: status badge variants ──────── */
@@ -220,24 +227,22 @@
   border: 1px solid rgba(34, 197, 94, 0.3);
 }
 
-@media (prefers-color-scheme: dark) {
-  .task-status--pending {
-    color: #fbbf24;
-    background: rgba(245, 158, 11, 0.15);
-    border-color: rgba(245, 158, 11, 0.35);
-  }
+[data-theme="dark"] .task-status--pending {
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.35);
+}
 
-  .task-status--in-progress {
-    color: #93c5fd;
-    background: rgba(59, 130, 246, 0.15);
-    border-color: rgba(59, 130, 246, 0.35);
-  }
+[data-theme="dark"] .task-status--in-progress {
+  color: #93c5fd;
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.35);
+}
 
-  .task-status--done {
-    color: #4ade80;
-    background: rgba(34, 197, 94, 0.15);
-    border-color: rgba(34, 197, 94, 0.35);
-  }
+[data-theme="dark"] .task-status--done {
+  color: #4ade80;
+  background: rgba(34, 197, 94, 0.15);
+  border-color: rgba(34, 197, 94, 0.35);
 }
 
 /* ── Panel: description + overdue ──────── */

@@ -14,7 +14,7 @@
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 40px 36px;
-  box-shadow: var(--shadow);
+  box-shadow: var(--shad);
 }
 
 .login-brand {
@@ -66,7 +66,7 @@
 .field label {
   font-size: 14px;
   font-weight: 500;
-  color: var(--text-h);
+  color: var(--texth);
 }
 
 .field input {
@@ -74,7 +74,7 @@
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--bg);
-  color: var(--text-h);
+  color: var(--texth);
   font-size: 15px;
   font-family: var(--sans);
   transition: border-color 0.2s, box-shadow 0.2s;
@@ -151,9 +151,7 @@
   font-size: 14px;
 }
 
-@media (prefers-color-scheme: dark) {
-  .login-success { color: #4ade80; }
-}
+[data-theme="dark"] .login-success { color: #4ade80; }
 
 .forgot-sent {
   padding: 12px 14px;
@@ -165,9 +163,7 @@
   line-height: 1.5;
 }
 
-@media (prefers-color-scheme: dark) {
-  .forgot-sent { color: #4ade80; }
-}
+[data-theme="dark"] .forgot-sent { color: #4ade80; }
 
 .forgot-link {
   display: block;

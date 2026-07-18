@@ -29,7 +29,7 @@
 
 /* ── Bull card ─────────────────────────── */
 .bull-card {
-  background: var(--bg);
+  background: var(--card);
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 16px;
@@ -39,6 +39,7 @@
   text-align: left;
   cursor: pointer;
   font-family: var(--sans);
+  box-shadow: var(--shad);
   transition: box-shadow 0.15s, border-color 0.15s;
 }
 
@@ -78,17 +79,15 @@
 }
 
 .bull-badge--inactive {
-  background: var(--code-bg);
+  background: var(--bg2);
   color: var(--text);
   border: 1px solid var(--border);
 }
 
-@media (prefers-color-scheme: dark) {
-  .bull-badge--active {
-    background: rgba(34, 197, 94, 0.15);
-    color: #4ade80;
-    border-color: rgba(34, 197, 94, 0.35);
-  }
+[data-theme="dark"] .bull-badge--active {
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+  border-color: rgba(34, 197, 94, 0.35);
 }
 
 .bull-code-tag {
@@ -96,7 +95,7 @@
   font-weight: 600;
   color: var(--text);
   font-family: var(--mono);
-  background: var(--code-bg);
+  background: var(--bg2);
   padding: 2px 7px;
   border-radius: 4px;
   white-space: nowrap;
@@ -105,7 +104,7 @@
 .bull-card-name {
   font-size: 15px;
   font-weight: 700;
-  color: var(--text-h);
+  color: var(--texth);
   line-height: 1.3;
   letter-spacing: -0.2px;
 }
@@ -125,7 +124,7 @@
 .bull-straw-count {
   font-size: 13px;
   font-weight: 700;
-  color: var(--text-h);
+  color: var(--texth);
 }
 
 .bull-last-date {
@@ -163,10 +162,8 @@
   color: var(--text);
 }
 
-@media (prefers-color-scheme: dark) {
-  .bull-status-active {
-    color: #4ade80;
-  }
+[data-theme="dark"] .bull-status-active {
+  color: #4ade80;
 }
 
 /* Notes field — allow wrapping */
@@ -181,7 +178,7 @@
   word-break: break-word;
   white-space: pre-wrap;
   font-size: 13px;
-  color: var(--text-h);
+  color: var(--texth);
   margin: 0;
   font-weight: 500;
 }
@@ -222,7 +219,7 @@
 }
 
 .bull-batch-item {
-  background: var(--code-bg);
+  background: var(--bg2);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 10px 12px;
@@ -234,7 +231,7 @@
 .bull-batch-location {
   font-size: 13px;
   font-weight: 600;
-  color: var(--text-h);
+  color: var(--texth);
 }
 
 .bull-batch-meta {
@@ -268,14 +265,14 @@
 .bull-batch-qty {
   font-size: 12px;
   font-weight: 600;
-  color: var(--text-h);
+  color: var(--texth);
 }
 
 .bull-batch-sio {
   font-size: 11px;
   color: var(--text);
   font-family: var(--mono);
-  background: var(--bg);
+  background: var(--card);
   padding: 1px 5px;
   border-radius: 3px;
   border: 1px solid var(--border);
@@ -293,7 +290,7 @@
   border: 1px solid var(--border);
   border-radius: 7px;
   background: var(--bg);
-  color: var(--text-h);
+  color: var(--texth);
   font-size: 14px;
   font-family: var(--sans);
   outline: none;

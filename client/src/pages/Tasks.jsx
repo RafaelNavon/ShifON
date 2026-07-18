@@ -231,7 +231,7 @@ function TaskColumn({ title, status, tasks, onSelect, selectedId, canMoveTask })
   })
 
   return (
-    <div ref={setNodeRef} className={`task-column${isOver ? ' task-column--drop-over' : ''}`}>
+    <div ref={setNodeRef} className={`task-column${status === 'done' ? ' task-column--done' : ''}${isOver ? ' task-column--drop-over' : ''}`}>
       <div className={`task-col-header task-col-header--${status}`}>
         <span className="task-col-title">{title}</span>
         <span className="task-col-count">{tasks.length}</span>
