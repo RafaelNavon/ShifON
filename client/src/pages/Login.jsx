@@ -40,6 +40,29 @@ export default function Login() {
 
   return (
     <div className="login-page">
+      <div className="login-left">
+        <div className="login-left-top">
+          <span className="login-left-logo">S</span>
+          <h1 className="login-left-title">ShifON</h1>
+          <p className="login-left-subtitle" dir="rtl">Lab Management System</p>
+        </div>
+        <div className="login-left-stats">
+          <div className="login-left-stat">
+            <span className="login-left-stat-num">—</span>
+            <span className="login-left-stat-label">Bulls</span>
+          </div>
+          <div className="login-left-stat">
+            <span className="login-left-stat-num">—</span>
+            <span className="login-left-stat-label">Straws</span>
+          </div>
+          <div className="login-left-stat">
+            <span className="login-left-stat-num">—</span>
+            <span className="login-left-stat-label">Tanks</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="login-right">
       <div className="login-card">
         <div className="login-brand">
           <span className="login-logo">S</span>
@@ -82,6 +105,7 @@ export default function Login() {
             {loading ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
+      </div>
       </div>
     </div>
   )
