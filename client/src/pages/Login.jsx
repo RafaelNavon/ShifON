@@ -40,16 +40,6 @@ export default function Login() {
 
   return (
     <div className="login-page">
-      <div className="login-left">
-        <div className="login-left-top">
-          <span className="login-left-logo">S</span>
-          <h1 className="login-left-title">ShifON</h1>
-          <p className="login-left-subtitle" dir="rtl">
-            Lab Management System
-          </p>
-        </div>
-      </div>
-
       <div className="login-right">
         <div className="login-card">
           <div className="login-brand">
