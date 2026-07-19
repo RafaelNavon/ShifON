@@ -74,7 +74,7 @@ export default function Dashboard() {
   const openCount = data.tasks.filter((t) => t.status !== "done").length;
 
   return (
-    <div className="dash-page">
+    <div className="dash-page page">
       <div className="dash-greeting">
         <h1 className="dash-greeting-text">
           {greeting()}, {firstName}

@@ -51,7 +51,7 @@ export default function Bulls() {
   }
 
   return (
-    <div className="bulls-page">
+    <div className="bulls-page page">
       <div className="page-header">
         <h1 className="page-title">Bulls</h1>
         <button className="btn-primary" onClick={() => setModalBull(null)}>+ Add bull</button>

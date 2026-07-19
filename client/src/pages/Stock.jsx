@@ -138,7 +138,7 @@ export default function Stock() {
   const draftCount = Object.keys(drafts).length
 
   return (
-    <div className={`stock-page${mode === 'edit' ? ' stock-page--editing' : ''}`}>
+    <div className={`stock-page page${mode === 'edit' ? ' stock-page--editing' : ''}`}>
       <div className="page-header">
         <h1 className="page-title">Stock</h1>
         {mode === 'view'

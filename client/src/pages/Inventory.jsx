@@ -95,7 +95,7 @@ export default function Inventory() {
   ).length;
 
   return (
-    <div className="inv-page">
+    <div className="inv-page page">
       <div className="page-header">
         <h1 className="page-title">Inventory</h1>
         <button className="btn-primary" onClick={() => openModal()}>

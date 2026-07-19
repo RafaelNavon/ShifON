@@ -147,7 +147,7 @@ export default function Tasks() {
   }
 
   return (
-    <div className="tasks-page">
+    <div className="tasks-page page">
       <div className="page-header">
         <h1 className="page-title">Tasks</h1>
         <button className="btn-primary" onClick={() => setModalTask(null)}>+ New task</button>

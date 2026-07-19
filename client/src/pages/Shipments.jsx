@@ -99,7 +99,7 @@ export default function Shipments() {
   }
 
   return (
-    <div className="ship-page">
+    <div className="ship-page page">
       <div className="page-header">
         <h1 className="page-title">Shipments</h1>
         <button className="btn-primary" onClick={() => setModalOpen(true)}>
