@@ -1,7 +1,8 @@
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(7, 18, 42, 0.5);
+  backdrop-filter: blur(3px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -16,14 +17,14 @@
 }
 
 .modal {
-  background: var(--bg);
+  background: var(--card);
   border: 1px solid var(--border);
   border-radius: 14px;
   width: 100%;
   max-width: 480px;
   max-height: 90dvh;
   overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.22);
   animation: modal-in 0.18s ease;
 }
 
@@ -40,7 +41,7 @@
   border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
-  background: var(--bg);
+  background: var(--bg2);
   z-index: 1;
 }
 
@@ -65,7 +66,7 @@
 }
 
 .modal-close:hover {
-  background: var(--code-bg);
+  background: var(--bg2);
   color: var(--text-h);
 }
 
@@ -98,7 +99,7 @@
   padding: 9px 12px;
   border: 1px solid var(--border);
   border-radius: 7px;
-  background: var(--bg);
+  background: var(--inbg);
   color: var(--text-h);
   font-size: 14px;
   font-family: var(--sans);
@@ -129,10 +130,10 @@
   grid-column: 1 / -1;
   margin: 0;
   padding: 10px 14px;
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: var(--dangbg);
+  border: 1px solid rgba(220, 38, 38, 0.25);
   border-radius: 7px;
-  color: #ef4444;
+  color: var(--danger);
   font-size: 13px;
 }
 
@@ -142,6 +143,11 @@
   justify-content: flex-end;
   gap: 10px;
   padding-top: 4px;
+  background: var(--bg2);
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  margin: 0 -24px -24px;
+  border-radius: 0 0 14px 14px;
 }
 
 .btn-ghost {
