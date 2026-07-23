@@ -1,40 +1,52 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const pool = require('./db');
+require("dotenv").config();
+const express = require("express");
+const cors = require("cors");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
+const pool = require("./db");
 
-const authRoutes = require('./routes/auth');
-const inviteRoutes = require('./routes/invite');
-const passwordResetRoutes = require('./routes/passwordReset');
-const bullRoutes = require('./routes/bulls');
-const containerRoutes = require('./routes/containers');
-const batchRoutes = require('./routes/batches');
-const shipmentRoutes = require('./routes/shipments');
-const stockRoutes = require('./routes/stock');
-const dailyLogRoutes = require('./routes/daily_logs');
-const taskRoutes = require('./routes/tasks');
-const userRoutes = require('./routes/users');
-const dashboardRoutes = require('./routes/dashboard');
+const authRoutes = require("./routes/auth");
+const inviteRoutes = require("./routes/invite");
+const passwordResetRoutes = require("./routes/passwordReset");
+const bullRoutes = require("./routes/bulls");
+const containerRoutes = require("./routes/containers");
+const batchRoutes = require("./routes/batches");
+const shipmentRoutes = require("./routes/shipments");
+const stockRoutes = require("./routes/stock");
+const dailyLogRoutes = require("./routes/daily_logs");
+const taskRoutes = require("./routes/tasks");
+const userRoutes = require("./routes/users");
+const dashboardRoutes = require("./routes/dashboard");
 
 const app = express();
 
-app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }));
+app.use(helmet());
+app.use(cors({ origin: process.env.CLIENT_URL || "http://localhost:5173" }));
 app.use(express.json());
 
-app.use('/api/auth', authRoutes);
-app.use('/api/auth', passwordResetRoutes);
-app.use('/api/invite', inviteRoutes);
-app.use('/api/bulls', bullRoutes);
-app.use('/api/containers', containerRoutes);
-app.use('/api/batches', batchRoutes);
-app.use('/api/shipments', shipmentRoutes);
-app.use('/api/stock', stockRoutes);
-app.use('/api/daily-logs', dailyLogRoutes);
-app.use('/api/tasks', taskRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/dashboard', dashboardRoutes);
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: "Too many login attempts, please try again later" },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
-app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
+app.use("/api/auth/login", loginLimiter);
+app.use("/api/auth", authRoutes);
+app.use("/api/auth", passwordResetRoutes);
+app.use("/api/invite", inviteRoutes);
+app.use("/api/bulls", bullRoutes);
+app.use("/api/containers", containerRoutes);
+app.use("/api/batches", batchRoutes);
+app.use("/api/shipments", shipmentRoutes);
+app.use("/api/stock", stockRoutes);
+app.use("/api/daily-logs", dailyLogRoutes);
+app.use("/api/tasks", taskRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+
+app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 
 async function cleanupDoneTasks() {
   try {
@@ -43,7 +55,7 @@ async function cleanupDoneTasks() {
     );
     if (rowCount) console.log(`Cleaned up ${rowCount} expired done task(s).`);
   } catch (err) {
-    console.error('Error in cleanupDoneTasks:', err);
+    console.error("Error in cleanupDoneTasks:", err);
   }
 }
 
