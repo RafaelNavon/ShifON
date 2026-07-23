@@ -33,6 +33,7 @@
   font-weight: 700;
   color: var(--text-h);
   margin: 0;
+  letter-spacing: -0.3px;
 }
 
 /* ── Stat cards ────────────────────────── */
@@ -273,5 +274,6 @@
 
   .dash-greeting-text {
     font-size: 20px;
+    letter-spacing: -0.2px;
   }
 }
