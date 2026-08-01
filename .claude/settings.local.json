@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(npm ls *)",
+      "PowerShell(cd \"C:\\\\Users\\\\raffi158\\\\Desktop\\\\SoftwareDevelopment\\\\WebDev\\\\ShifON\\\\server\"; \\(Get-Command railway -ErrorAction SilentlyContinue\\).Source; node -e \"require\\('dotenv'\\).config\\(\\); const m=require\\('./src/utils/mailer'\\); console.log\\('loaded ok, export type:', typeof m.sendPasswordResetEmail\\);\")"
     ]
   }
 }

@@ -1,17 +1,9 @@
-const nodemailer = require("nodemailer");
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD,
-  },
-});
+const { Resend } = require("resend");
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 async function sendPasswordResetEmail(toEmail, resetLink) {
-  await transporter.sendMail({
-    from: `"ShifON" <${process.env.GMAIL_USER}>`,
+  const { error } = await resend.emails.send({
+    from: process.env.MAIL_FROM || "ShifON <onboarding@resend.dev>",
     to: toEmail,
     subject: "ShifON - Password Reset",
     html: `
@@ -31,6 +23,11 @@ async function sendPasswordResetEmail(toEmail, resetLink) {
       </div>
     `,
   });
+
+  if (error) {
+    console.error("Resend error sending password reset:", error);
+    throw new Error("Failed to send email");
+  }
 }
 
 module.exports = { sendPasswordResetEmail };
