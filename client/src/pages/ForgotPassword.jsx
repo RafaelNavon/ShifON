@@ -1,29 +1,29 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import './Login.css'
-import './Signup.css'
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import "./Login.css";
+import "./Signup.css";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export default function ForgotPassword() {
-  const [email, setEmail] = useState('')
-  const [submitted, setSubmitted] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [email, setEmail] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e) {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    setLoading(true);
     try {
       await fetch(`${API_URL}/api/auth/forgot-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
-      })
+      });
     } catch {
       // swallow — always show the same message
     } finally {
-      setLoading(false)
-      setSubmitted(true)
+      setLoading(false);
+      setSubmitted(true);
     }
   }
 
@@ -31,7 +31,7 @@ export default function ForgotPassword() {
     <div className="login-page">
       <div className="login-card">
         <div className="login-brand">
-          <span className="login-logo">S</span>
+          <img src="/icon-512.png" alt="ShifON" className="login-logo-img" />
           <h1>ShifON</h1>
         </div>
         <p className="login-subtitle">Reset your password</p>
@@ -39,9 +39,10 @@ export default function ForgotPassword() {
         {submitted ? (
           <>
             <div className="forgot-sent">
-              If this email exists, a reset link has been sent. Check your inbox.
+              If this email exists, a reset link has been sent. Check your
+              inbox.
             </div>
-            <p className="signup-footer" style={{ marginTop: '20px' }}>
+            <p className="signup-footer" style={{ marginTop: "20px" }}>
               <Link to="/login">Back to sign in</Link>
             </p>
           </>
@@ -61,7 +62,7 @@ export default function ForgotPassword() {
             </div>
 
             <button type="submit" className="login-btn" disabled={loading}>
-              {loading ? 'Sending…' : 'Send Reset Link'}
+              {loading ? "Sending…" : "Send Reset Link"}
             </button>
 
             <p className="signup-footer" style={{ marginTop: 0 }}>
@@ -71,5 +72,5 @@ export default function ForgotPassword() {
         )}
       </div>
     </div>
-  )
+  );
 }
