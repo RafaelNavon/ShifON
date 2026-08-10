@@ -9,7 +9,7 @@ router.use(authenticate);
 router.get('/', async (req, res) => {
   try {
     const { rows: containers } = await pool.query(
-      'SELECT * FROM containers ORDER BY id',
+      'SELECT * FROM containers ORDER BY sort_order, id',
     );
 
     const { rows: slots } = await pool.query(`
