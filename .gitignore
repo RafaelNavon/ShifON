@@ -6,3 +6,5 @@ client/.dockerignore
 server/Dockerfile
 server/.dockerignore
 docker-compose.yml
+production-schema.sql
+*.sql
