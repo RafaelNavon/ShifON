@@ -17,6 +17,7 @@ const dailyLogRoutes = require("./routes/daily_logs");
 const taskRoutes = require("./routes/tasks");
 const userRoutes = require("./routes/users");
 const dashboardRoutes = require("./routes/dashboard");
+const dutyRoutes = require("./routes/duties");
 
 const app = express();
 
@@ -46,6 +47,7 @@ app.use("/api/daily-logs", dailyLogRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/duties", dutyRoutes);
 
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 

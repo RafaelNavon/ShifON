@@ -45,10 +45,85 @@ function isOverdue(task) {
   return task.due_date < todayStr();
 }
 
+const DAY_NAMES = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
+
+function DutyCard({ duty, userId, onChange }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  const label = duty.name.toLowerCase();
+  const isMine = duty.claimed_by === userId;
+  const claimerFirst = (duty.claimed_by_name || "Someone").split(" ")[0];
+
+  async function act(action) {
+    setBusy(true);
+    setError("");
+    try {
+      const res = await apiFetch(`/api/duties/${duty.id}/${action}`, {
+        method: "POST",
+      });
+      if (!res) return;
+      const body = await res.json();
+      if (res.ok) {
+        onChange(body);
+      } else {
+        setError(body.error || "Something went wrong");
+        if (body.duty) onChange(body.duty);
+      }
+    } catch (err) {
+      console.error(`Duty ${action} error:`, err);
+      setError("Something went wrong");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className={`dash-duty${duty.claimed_by ? " dash-duty--claimed" : ""}`}>
+      <div className="dash-duty-info">
+        <span className="dash-duty-day">{DAY_NAMES[duty.day_of_week]}</span>
+        <span className="dash-duty-text">
+          {!duty.claimed_by
+            ? `${duty.name} this week: nobody yet`
+            : isMine
+              ? `You're getting the ${label}`
+              : `${claimerFirst} is getting the ${label}`}
+        </span>
+        {error && <span className="dash-duty-error">{error}</span>}
+      </div>
+      {!duty.claimed_by && (
+        <button
+          className="dash-duty-btn"
+          disabled={busy}
+          onClick={() => act("claim")}>
+          I'll take it
+        </button>
+      )}
+      {isMine && (
+        <button
+          className="dash-duty-btn dash-duty-btn--cancel"
+          disabled={busy}
+          onClick={() => act("cancel")}>
+          Cancel
+        </button>
+      )}
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [duties, setDuties] = useState([]);
   const navigate = useNavigate();
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -66,7 +141,18 @@ export default function Dashboard() {
         setError("Failed to load dashboard");
         setLoading(false);
       });
+
+    apiFetch("/api/duties")
+      .then((r) => r?.json())
+      .then((d) => {
+        if (Array.isArray(d)) setDuties(d);
+      })
+      .catch((err) => console.error("Duties fetch error:", err));
   }, []);
+
+  function updateDuty(updated) {
+    setDuties((prev) => prev.map((d) => (d.id === updated.id ? updated : d)));
+  }
 
   if (loading) return <p className="dash-status">Loading…</p>;
   if (error) return <p className="dash-status dash-status--error">{error}</p>;
@@ -102,6 +188,20 @@ export default function Dashboard() {
           <span className="stat-label">Overdue</span>
         </div>
       </div>
+
+      {duties.length > 0 && (
+        <section className="dash-section">
+          <h2 className="dash-section-title">Weekly Duties</h2>
+          {duties.map((d) => (
+            <DutyCard
+              key={d.id}
+              duty={d}
+              userId={user.id}
+              onChange={updateDuty}
+            />
+          ))}
+        </section>
+      )}
 
       <div className="dash-body">
         <section className="dash-section">

@@ -239,7 +239,89 @@
   opacity: 0.7;
 }
 
+/* ── Weekly duties ─────────────────────── */
+.dash-duty {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  border-left: 3px solid var(--warn);
+}
+
+.dash-duty:last-child {
+  border-bottom: none;
+}
+
+.dash-duty--claimed {
+  border-left-color: var(--success);
+}
+
+.dash-duty-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.dash-duty-day {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--textm);
+}
+
+.dash-duty-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--texth);
+}
+
+.dash-duty-error {
+  font-size: 12px;
+  color: var(--danger);
+}
+
+.dash-duty-btn {
+  flex-shrink: 0;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+  transition: opacity 0.12s, background 0.12s;
+}
+
+.dash-duty-btn:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+.dash-duty-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.dash-duty-btn--cancel {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--danger);
+}
+
+.dash-duty-btn--cancel:hover:not(:disabled) {
+  opacity: 1;
+  background: var(--dangbg);
+}
+
 /* ── Dark mode adjustments ─────────────── */
+[data-theme="dark"] .dash-duty-btn:not(.dash-duty-btn--cancel) {
+  color: #071526;
+}
+
 [data-theme="dark"] .dash-task-status--pending {
   color: #fbbf24;
   background: rgba(245, 158, 11, 0.15);
